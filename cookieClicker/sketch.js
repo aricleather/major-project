@@ -25,17 +25,22 @@ let gMouseToggle = {
   _bound: 0,
 
   set val(x) {
-    this._val = x;
-    if(this._val) {
-      gMouseControl(false);
-    }
+    console.log("Setting to: ", x);
+    this._val = x > this._val ? x : this._val;
+    gMouse = this._val;
   },
   set bound(x) {
     this._bound = x > this._bound ? x : this._bound;
   },
+
   end: function() {
+    if(!mouseIsPressed) {
+      gMouse = this._bound;
+    }
     this._bound = 0;
+    this._val = 0;
   },
+
   get val() {
     return this._val;
   },
@@ -43,27 +48,10 @@ let gMouseToggle = {
     return this._bound;
   },
 };
+
 let gMouse = 0;
 let currentDialog = [];
 let input = null;
-
-function gMouseControl(end) {
-  // This function exists so that gMouseToggle can be called at any time in draw loop and
-  // still block clicks. gMouseControl is run at end of draw loop so that if anything 
-  // sets gMouseToggle to true, gMouse will also be true at end of draw loop, blocking clicks
-  if(gMouseToggle.val && !end) {
-    // If something toggles two different priorities, always keep the higher
-    gMouse = gMouseToggle.val > gMouse ? gMouseToggle.val : gMouse;
-    console.log("Non-end: ", gMouse);
-  }
-
-  if(!mouseIsPressed) {
-    gMouse = gMouseToggle.bound;
-  }
-  if(end) {
-    gMouseToggle.end();
-  }
-}
 
 function newInput(whichInput, x, y, width, height) {
   if(whichInput === "text") {
@@ -266,7 +254,7 @@ function draw() {
   }
   globalMessage.run();
   displayAnimation();
-  gMouseControl(true);
+  gMouseToggle.end();
 }
 
 function menu() { // gameState 0

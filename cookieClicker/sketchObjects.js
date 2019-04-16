@@ -26,7 +26,7 @@ let achievementNumber = 0;
 // Generate all game objects
 function initObjects() {
   // Buttons
-  titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, 0, "New Game", function() {
+  titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, 1, "New Game", function() {
     buttonSelect1.play();
     // gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
@@ -170,7 +170,7 @@ function resizeObjects() {
   globalMessage.resize(width / 2, height / 5, width * 0.6, height * 0.2);
 
   // Exp bars
-  playerExpBar.resize(width * 0.5, height * 0.02, width * 0.4, height * 0.02);
+  playerExpBar.resize(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02);
 
   playerInventory.resize(width / 2, height * 0.22, 400);
 }

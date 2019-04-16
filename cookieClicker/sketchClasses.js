@@ -970,8 +970,14 @@ class BackgroundBox extends GameObject {
     rectMode(CENTER);
     rect(this.x, this.y, this.width, this.height);
 
-    if(this.mode === "click" && !this.mouse && gMouse <= this.priority && mouseIsPressed) {
-      this.close = true;
+    if(this.mode === "click" && !this.mouse && gMouse <= this.priority) {
+      if(mouseIsPressed) {
+        console.log("box log: gMouse is: " + str(gMouse) + " my priority is: " + str(this.priority));
+        this.close = true;
+      }
+      else {
+        this.close = false;
+      }
     }
     else if(this.mode === "hover") {
       if(!this.mouse) {
@@ -1050,7 +1056,7 @@ class InventoryScreen extends GameObject {
       line(this.leftX, y, this.rightX, y);
     }
 
-    // Draw the image of the object of there is one in that slot
+    // Draw the image of the object if there is one in that slot
     for(let i = 0; i < this.rows; i++) {
       for(let j = 0; j < this.cols; j++) {
         if(this.itemArr[i][j].type === "weapon") {
@@ -1060,20 +1066,15 @@ class InventoryScreen extends GameObject {
       }
     }
 
+    // Display meta text in a text box if an item is in a slot
     if(this.mouse) {
-      // What box is the mouse inside
+      // Calculate what box is the mouse inside
       this.mouseXPos = constrain(Math.floor((mouseX - this.leftX) / this.boxSize), 0, this.cols - 1);
       this.mouseYPos = constrain(Math.floor((mouseY - this.topY) / this.boxSize), 0, this.rows - 1);
-      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox & !this.upgradeBox) {
-        // If no options box or upgrade box is open and no item is held, shows a text box displaying the item info
-        if(this.itemArr[this.mouseYPos]) {
+      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox & !this.upgradeBox) {     
+        if(this.itemArr[this.mouseYPos][this.mouseXPos]) {
           let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
-          if(hoveredThing === 0) {
-            displayTextBox("Empty.", mouseX, mouseY, 0, "small");
-          }
-          else if(hoveredThing.type === "weapon") {
-            displayTextBox(hoveredThing.metaText, mouseX, mouseY);
-          }
+          displayTextBox(hoveredThing.metaText, mouseX, mouseY);
         }
       }
 
@@ -1095,18 +1096,6 @@ class InventoryScreen extends GameObject {
     }
 
     // If options box is toggled and it isn't being closed, run the optionsBox
-    if(this.box.close && !this.toggleOptionsBox) {
-      closeInventory();
-      // So it doesn't auto-close next time
-      this.box.close = false;
-
-      // If the user was holding an item when the box was closed, put it back where it was
-      // Possible because when an item is picked up it is given "pickedUpFrom" attribute
-      if(this.mouseHeldItem && gMouse === this.priority) {
-        this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
-        this.mouseHeldItem = 0;
-      }
-    }
     
     if(this.upgradeBox) {
       this.runUpgradeBox();
@@ -1115,20 +1104,40 @@ class InventoryScreen extends GameObject {
     if(this.toggleOptionsBox) {
       this.runOptionsBox();
     }
+
+    if(this.box.close && !this.toggleOptionsBox && gMouse <= this.priority) {
+      console.log(this.box.close);
+      closeInventory();
+      // So it doesn't auto-close next time
+      this.box.close = false;
+
+      // If the user was holding an item when the box was closed, put it back where it was
+      // Possible because when an item is picked up it is given "pickedUpFrom" attribute
+      if(this.mouseHeldItem) {
+        this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
+        this.mouseHeldItem = 0;
+      }
+    }
   }
 
   runOptionsBox() {
+    // Actually run the box
     this.optionsBox.run();
+
+    // If info button pressed...
     if(this.optionsBox.buttonPressed === 0) {
       console.log("Not yet");
+      this.resetOptionsBox();
     }
 
+    // If move button pressed pick up the item at location that was stored in clickedItemCoords
     else if(this.optionsBox.buttonPressed === 1) {
       this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
       this.resetOptionsBox();
       gMouseToggle.val = this.priority + 1;
     }
 
+    // If upgrade button pressed open upgrade menu with item that was stored in clickedItemCoords
     else if(this.optionsBox.buttonPressed === 2) {
       this.upgradeBox = new UpgradeMenu(this.x, this.y, this.width * 0.8, this.height * 0.8, [63, 102, 141, 255], this.priority + 1, this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]]);
       this.resetOptionsBox();

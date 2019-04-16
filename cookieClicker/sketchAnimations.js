@@ -59,7 +59,7 @@ class NewGameAnimation {
 
   run() {
     // User cannot make any input during anim
-    gMouseToggle.val.val = 2;
+    gMouseToggle.val = 2;
     
 
     if(this.toggleFadeBackground) {
@@ -146,7 +146,7 @@ class TitleScreenAnimation1 {
   }
 
   run() {
-    gMouseToggle.val.val = 1;
+    gMouseToggle.val = 1;
     gameState = 3;
     background(0);
 
