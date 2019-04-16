@@ -1,0 +1,28 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+@font-face {
+  font-family: gameFont;
+  src: url(assets/gameFont.ttf);
+}
+
+.loadingclass {
+  background: black;
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  display: table;
+}
+
+.loadingtext {
+  font-family: "gameFont";
+  font-size: 40px;
+  color: white;
+  max-width: 600px;
+  margin: 0 auto;
+  vertical-align: middle;
+  display: table-cell;
+}
