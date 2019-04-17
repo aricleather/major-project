@@ -159,9 +159,10 @@ class SpinImage extends GameObject {
 
 class ImageButton extends GameObject {
   // Same as ImageObject but enlarges on hover for a more button-like effect
-  constructor(x, y, width, height, objImage, clicked, hoverScalar, objText) {
+  constructor(x, y, width, height, priority, objImage, clicked, hoverScalar, objText) {
     super(x, y, width, height);
     // Vars
+    this.priority = priority;
     this.objImage = objImage;
     this.clicked = clicked;
     this.hoverScalar = hoverScalar;
@@ -174,7 +175,7 @@ class ImageButton extends GameObject {
   run() {
     // Check if mouse is on top then enlarge image based on hoverScalar if mouse hovering
     this.calcMouse();
-    if(this.mouse && !gMouse && this.width === this.minWidth) {
+    if(this.mouse && gMouse <= this.priority && this.width === this.minWidth) {
       this.width *= this.hoverScalar;
       this.height *= this.hoverScalar;
     }
@@ -194,9 +195,9 @@ class ImageButton extends GameObject {
 
     // Allow clicking only once before releasing mouse
     if(this.mouse) {
-      if(mouseIsPressed && gMouse < 1) {
+      if(mouseIsPressed && gMouse <= this.priority) {
         this.clicked();
-        gMouseToggle.val = 2;
+        gMouseToggle.val = this.priority + 1;
       }
     }
   }
@@ -650,6 +651,7 @@ class GlobalMessage extends GameObject {
   run() {
     if(this.toggled) {
       fill(0, this.textAlpha);
+      noStroke();
       textSize(this.tSize);
       textAlign(CENTER, CENTER);
       text(this.objText, this.x, this.y);
@@ -970,6 +972,8 @@ class BackgroundBox extends GameObject {
     rectMode(CENTER);
     rect(this.x, this.y, this.width, this.height);
 
+    // I would like to rework my Window system at some point, the amount of code to manage "box.close" 
+    // is rather painful to me. Maybe the classes utilizing the box should manage it themselves
     if(this.mode === "click" && !this.mouse && gMouse <= this.priority) {
       if(mouseIsPressed) {
         console.log("box log: gMouse is: " + str(gMouse) + " my priority is: " + str(this.priority));
@@ -986,6 +990,9 @@ class BackgroundBox extends GameObject {
       else {
         this.close = false;
       }
+    }
+    if(gMouse > this.priority) {
+      this.close = false;
     }
 
     // Because of the order in which functions were run, without adding 1 to this toggle,

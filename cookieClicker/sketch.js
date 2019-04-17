@@ -118,6 +118,7 @@ function preload() {
   goldStar = loadImage("assets/goldStar.png");
   woodenSword = loadImage("assets/woodenSword.png");
   inventoryButton = loadImage("assets/invButton.png");
+  minigameIcon = loadImage("assets/minigameIcon.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -282,6 +283,8 @@ function mainGame() { // gameState 1
   }
   else {
     openShopButton.run();
+    inventoryOpenButton.run();
+    miniGamesButton.run();
   }
   if(achievementState) {
     displayAchievementsMenu();
@@ -296,7 +299,6 @@ function displayGame() {
   cookieFall();
   // cookieSpinner.run();
   mainCookie.run();
-  inventoryOpenButton.run();
 
   // Draws cookie amount text to screen
   noStroke();

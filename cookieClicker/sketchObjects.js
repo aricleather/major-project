@@ -57,21 +57,24 @@ function initObjects() {
     });
 
   // Image buttons
-  openShopButton = new ImageButton(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, coin, function() {
+  openShopButton = new ImageButton(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, 0, coin, function() {
     shopState = 1;
   }, 1.05, "Open Shop");
-  closeShopButton = new ImageButton(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar, rightArrow, function() {
+  closeShopButton = new ImageButton(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar, 0, rightArrow, function() {
     shopState = 0;
   }, 1.05, "Close Shop");
-  openAchievementsButton = new ImageButton(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar, goldStar, function() {
+  openAchievementsButton = new ImageButton(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar, 0, goldStar, function() {
     achievementState = 1;
   }, 1.05, "");
-  closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, leftArrow, function() {
+  closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, 0, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
-  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, inventoryButton, function() {
+  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, inventoryButton, function() {
     openInventory("player");
   }, 1.05, "Items");
+  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
+    globalMessage.toggle("Sorry, not ready yet!", 1000);
+  }, 1.05, "Minigames");
 
   // Tab buttons
   autoCookiesTab = new TabButton(width * 0.775, height * 0.975, width * 0.15, height * 0.05, function() {
