@@ -961,6 +961,7 @@ class BackgroundBox extends GameObject {
     this.priority = priority;
     this.close = false;
     this.mode = mode;
+    this.contentToRun = [];
   }
 
   run() {
@@ -993,6 +994,9 @@ class BackgroundBox extends GameObject {
     }
     if(gMouse > this.priority) {
       this.close = false;
+    }
+    for(let i = 0; i < this.contentToRun.length; i++) {
+      this.contentToRun[i].run();
     }
 
     // Because of the order in which functions were run, without adding 1 to this toggle,

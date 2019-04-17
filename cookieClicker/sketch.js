@@ -18,6 +18,7 @@ let playerLevel = 1;
 let playerExpToNextLevel = [10, 20, 40, 80];
 
 let currentInv = null;
+let openWindows = [];
 
 let saveFile;
 let gMouseToggle = {
@@ -293,6 +294,12 @@ function mainGame() { // gameState 1
     openAchievementsButton.run();
   }
   displayPlayerData();
+  for(let i = 0; i < openWindows.length; i++) {
+    openWindows[i].run();
+    if (openWindows[i].close) {
+      openWindows.splice(i, 1);
+    }
+  }
 }
 
 function displayGame() {

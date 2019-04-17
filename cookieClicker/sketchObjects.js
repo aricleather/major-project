@@ -23,6 +23,8 @@ let shopNumber = 0;
 let shopWeaponNumber = 0;
 let achievementNumber = 0;
 
+let spawners;
+
 // Generate all game objects
 function initObjects() {
   // Buttons
@@ -72,8 +74,9 @@ function initObjects() {
   inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, inventoryButton, function() {
     openInventory("player");
   }, 1.05, "Items");
-  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
-    globalMessage.toggle("Sorry, not ready yet!", 1000);
+  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, minigameIcon, function() {
+    openWindows.push(new BackgroundBox(width / 2, height * 0.22, 400, 200, [63, 102, 141, 200], 1, "click"));
+    spawners.minigames.call(openWindows[0]);
   }, 1.05, "Minigames");
 
   // Tab buttons
@@ -127,7 +130,16 @@ function initObjects() {
 
   playerInventory = new InventoryScreen(width / 2, height * 0.22, 400, [63, 102, 141, 200], 1, 7, 4);
 
-  testOpt = new OptionsBox(200, 200, 100, 200, 2, ["Test", "Test"]);
+  spawners = {
+    minigames: function() {
+      this.contentToRun.push(new ImageButton(this.x - this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
+        globalMessage.toggle("Yay", 500);
+      }, 1.05, "Click"));
+      this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
+        cookies += 10;
+      }, 1.05, "Free"));
+    }
+  };
 }
 
 // Called when window resized to properly resize all game objects
@@ -177,3 +189,4 @@ function resizeObjects() {
 
   playerInventory.resize(width / 2, height * 0.22, 400);
 }
+
