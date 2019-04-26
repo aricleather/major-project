@@ -74,7 +74,7 @@ function initObjects() {
   inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, inventoryButton, function() {
     openInventory("player");
   }, 1.05, "Items");
-  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, minigameIcon, function() {
+  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
     openWindows.push(new BackgroundBox(width / 2, height * 0.22, 400, 200, [63, 102, 141, 200], 1, "click"));
     spawners.minigames.call(openWindows[0]);
   }, 1.05, "Minigames");

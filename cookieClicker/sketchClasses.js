@@ -960,49 +960,67 @@ class BackgroundBox extends GameObject {
     this.rgb = rgb;
     this.priority = priority;
     this.close = false;
+    this.open = true;
+    this.animFrames = 1;
     this.mode = mode;
     this.contentToRun = [];
   }
 
   run() {
-    this.calcMouse();
+    if(this.open) {
+      this.openAnimation();
+      gMouseToggle.val = this.priority + 1;
+    }
+    else {
+      this.calcMouse();
 
+      stroke(0);
+      strokeWeight(3);
+      fill(this.rgb);
+      rectMode(CENTER);
+      rect(this.x, this.y, this.width, this.height);
+  
+      // I would like to rework my Window system at some point, the amount of code to manage "box.close" 
+      // is rather painful to me. Maybe the classes utilizing the box should manage it themselves
+      if(this.mode === "click" && !this.mouse && gMouse <= this.priority) {
+        if(mouseIsPressed) {
+          console.log("box log: gMouse is: " + str(gMouse) + " my priority is: " + str(this.priority));
+          this.close = true;
+        }
+        else {
+          this.close = false;
+        }
+      }
+      else if(this.mode === "hover") {
+        if(!this.mouse) {
+          this.close = true;
+        }
+        else {
+          this.close = false;
+        }
+      }
+      if(gMouse > this.priority) {
+        this.close = false;
+      }
+      for(let i = 0; i < this.contentToRun.length; i++) {
+        this.contentToRun[i].run();
+      }
+    }
+    
+    gMouseToggle.bound = this.priority;
+  }
+
+  openAnimation() {
     stroke(0);
     strokeWeight(3);
     fill(this.rgb);
     rectMode(CENTER);
-    rect(this.x, this.y, this.width, this.height);
+    rect(this.x, this.y, this.animFrames / 5 * this.width, this.height);
 
-    // I would like to rework my Window system at some point, the amount of code to manage "box.close" 
-    // is rather painful to me. Maybe the classes utilizing the box should manage it themselves
-    if(this.mode === "click" && !this.mouse && gMouse <= this.priority) {
-      if(mouseIsPressed) {
-        console.log("box log: gMouse is: " + str(gMouse) + " my priority is: " + str(this.priority));
-        this.close = true;
-      }
-      else {
-        this.close = false;
-      }
+    this.animFrames++;
+    if(this.animFrames === 5) {
+      this.open = false;
     }
-    else if(this.mode === "hover") {
-      if(!this.mouse) {
-        this.close = true;
-      }
-      else {
-        this.close = false;
-      }
-    }
-    if(gMouse > this.priority) {
-      this.close = false;
-    }
-    for(let i = 0; i < this.contentToRun.length; i++) {
-      this.contentToRun[i].run();
-    }
-
-    // Because of the order in which functions were run, without adding 1 to this toggle,
-    // clicking an on-screen button to open a box would cause immediate closing.
-    // Putting this gMouseToggle at the end of the run prevents this from happening
-    gMouseToggle.bound = this.priority;
   }
 
   resize(x, y, width, height) {
