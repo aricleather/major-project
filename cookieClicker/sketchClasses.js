@@ -1528,11 +1528,22 @@ class MemoryPuzzle extends GameObject {
     this.playerWin = null;
     this.gamePhase = 0;
 
-    // Formatting stuff
+    // Formatting and positioning stuff
     this.cardSize = this.height / 5.5;
+    this.cardSizeWithGap = this.cardSize * 1.1;
     this.cardToFlip = 0;
     this.tSizeTop = this.width / 11;
     this.tSizeCard = this.cardSize * 0.75;
+
+    this.topYCard = this.y - this.height * 0.41;
+    this.topYText = this.y - this.height * 0.42;
+    this.leftX = this.x - this.width / 2;
+    this.mouseXOffset = this.leftX + this.width / 10;
+    this.mouseYOffset = this.topYCard + this.height / 10;
+
+    // Player input values
+    this.cardMouseX;
+    this.cardMouseY;
 
     // Time values
     this.timeToStartFlipping = millis() + 1000;
@@ -1562,11 +1573,6 @@ class MemoryPuzzle extends GameObject {
         this.cardArray[x1][y1] = this.cardValues[i];
       }
     }
-    
-    // Positioning and formatting
-    this.topYCard = this.y - this.height * 0.41;
-    this.topYText = this.y - this.height * 0.42;
-    this.leftX = this.x - this.width / 2;
 
   }
 
@@ -1598,14 +1604,17 @@ class MemoryPuzzle extends GameObject {
       for(let j = 1; j < 5; j++) {
         stroke(0);
         strokeWeight(2);
-        fill(220);
+        if(this.cardMouseX === i - 1 && this.cardMouseY === j - 1) {
+          fill(170);
+        }
+        else {
+          fill(220);
+        }
         rect(this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height, this.cardSize, this.cardSize);
         if(this.cardFlipArray[i - 1][j - 1]) {
           fill(0);
           noStroke();
           text(this.cardArray[i - 1][j - 1], this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height);
-          // console.log(this.cardArray[i - 1][j - 1] + " " + this.leftX + i / 5 * this.width + " " + this.topYCard + j / 5 * this.height);
-          // console.log(this.cardArray[i - 1][j - 1] + " " + i + " " + j);
         }
       }
     }
@@ -1659,5 +1668,10 @@ class MemoryPuzzle extends GameObject {
     noStroke();
     textSize(this.tSizeTop);
     text("Coming soon lol", this.x, this.topYText);
+    if(this.mouse) {
+      this.cardMouseX = constrain(Math.floor((mouseX - this.mouseXOffset) / this.cardSizeWithGap), 0, 3);
+      this.cardMouseY = constrain(Math.floor((mouseY - this.mouseYOffset) / this.cardSizeWithGap), 0, 3);
+
+    }
   }
 }
