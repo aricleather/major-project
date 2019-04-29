@@ -1519,3 +1519,145 @@ class NumberCounter extends GameObject {
     this.val += inc;
   }
 }
+
+class MemoryPuzzle extends GameObject {
+  constructor(x, y, width, height) {
+    super(x, y, width, height);
+    // Formats gameObject to be capped out at the height it was called with
+    this.width = this.height > this.width ? this.width : this.height;
+    this.playerWin = null;
+    this.gamePhase = 0;
+
+    // Formatting stuff
+    this.cardSize = this.height / 5.5;
+    this.cardToFlip = 0;
+    this.tSizeTop = this.width / 11;
+    this.tSizeCard = this.cardSize * 0.75;
+
+    // Time values
+    this.timeToStartFlipping = millis() + 1000;
+    this.flipNextCard = millis() + 1100;
+    this.memoryCountdown;
+
+    // Values that will be displayed on the cards
+    this.cardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+    // Set up two arrays: one stores card values, other stores whether a card is "flipped" or not
+    this.cardArray = [];
+    this.cardFlipArray = [];
+    for(let i = 0; i < 4; i++) {
+      this.cardArray.push([0, 0, 0, 0]);
+      this.cardFlipArray.push([0, 0, 0, 0]);
+    }
+    
+    // Push two cards of the same value 8 times into random locations into cardArray, being sure not to overlap
+    for(let i = 0; i < 8; i++) {
+      for(let j = 0; j < 2; j++) {
+        let x1 = Math.floor(random(0, 4));
+        let y1 = Math.floor(random(0, 4));
+        while(this.cardArray[x1][y1] !== 0) {
+          x1 = Math.floor(random(0, 4));
+          y1 = Math.floor(random(0, 4));
+        }
+        this.cardArray[x1][y1] = this.cardValues[i];
+      }
+    }
+    
+    // Positioning and formatting
+    this.topYCard = this.y - this.height * 0.41;
+    this.topYText = this.y - this.height * 0.42;
+    this.leftX = this.x - this.width / 2;
+
+  }
+
+  run() {
+    this.calcMouse();
+
+    // Formatting
+    rectMode(CENTER);
+    textAlign(CENTER, CENTER);
+
+    this.drawCards();
+    // Run based on current phase
+    if(this.gamePhase === 0) {
+      this.runIntro();
+    }
+    if(this.gamePhase === 1) {
+      this.runMemorize();
+    }
+    if(this.gamePhase === 2) {
+      this.runPlayerGame();
+    }
+    
+    
+  }
+
+  drawCards() {
+    textSize(this.tSizeCard);
+    for(let i = 1; i < 5; i++) {
+      for(let j = 1; j < 5; j++) {
+        stroke(0);
+        strokeWeight(2);
+        fill(220);
+        rect(this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height, this.cardSize, this.cardSize);
+        if(this.cardFlipArray[i - 1][j - 1]) {
+          fill(0);
+          noStroke();
+          text(this.cardArray[i - 1][j - 1], this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height);
+          // console.log(this.cardArray[i - 1][j - 1] + " " + this.leftX + i / 5 * this.width + " " + this.topYCard + j / 5 * this.height);
+          // console.log(this.cardArray[i - 1][j - 1] + " " + i + " " + j);
+        }
+      }
+    }
+  }
+
+  runIntro() {
+    // Text displayed on top
+    fill(0);
+    noStroke();
+    textSize(this.tSizeTop);
+    text("Memorize!", this.x, this.topYText);
+
+    if(millis() > this.timeToStartFlipping) {
+      if(millis() > this.flipNextCard) {
+        this.cardFlipArray[this.cardToFlip % 4][Math.floor(this.cardToFlip / 4)] = 1;
+        this.cardToFlip++;
+        this.flipNextCard += 100;
+        if(this.cardToFlip === 16) {
+          this.gamePhase = 1;
+          this.memoryCountdown = millis() + 6000;
+        }
+      }
+    }
+  }
+
+  runMemorize() {
+    // Switches the text from black to white for effect
+    if(Math.ceil((this.memoryCountdown - millis()) / 500) % 2) {
+      fill(255);
+    }
+    else {
+      fill(0);
+    }
+    
+    // Draws the timer
+    noStroke();
+    textSize(this.tSizeTop);
+    text(str(Math.floor((this.memoryCountdown - millis()) / 1000)) + " Seconds!", this.x, this.topYText);
+    
+    // Checks if timer is up. If so, flip all cards back over and go to next game phase
+    if(millis() >= this.memoryCountdown) {
+      for(let i = 0; i < 4; i++) {
+        this.cardFlipArray[i] = [0, 0, 0, 0];
+      }
+      this.gamePhase = 2;
+    }
+  }
+
+  runPlayerGame() {
+    fill(0);
+    noStroke();
+    textSize(this.tSizeTop);
+    text("Coming soon lol", this.x, this.topYText);
+  }
+}

@@ -133,13 +133,18 @@ function initObjects() {
   spawners = {
     minigames: function() {
       this.contentToRun.push(new ImageButton(this.x - this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
-        globalMessage.toggle("Yay", 500);
+        openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
+        spawners.memoryPuzzle.call(openWindows[openWindows.length - 1]);
       }, 1.05, "Click"));
       this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
         cookies += 10;
       }, 1.05, "Free"));
-    }
+    },
+    memoryPuzzle: function() {
+      this.contentToRun.push(new MemoryPuzzle(this.x, this.y, this.width, this.height));
+    },
   };
+
 }
 
 // Called when window resized to properly resize all game objects
