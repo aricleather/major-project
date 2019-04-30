@@ -1004,6 +1004,9 @@ class BackgroundBox extends GameObject {
       }
       for(let i = 0; i < this.contentToRun.length; i++) {
         this.contentToRun[i].run();
+        if(this.contentToRun[i].close === true) {
+          this.close = true;
+        }
       }
     }
     
@@ -1521,12 +1524,18 @@ class NumberCounter extends GameObject {
 }
 
 class MemoryPuzzle extends GameObject {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, priority) {
     super(x, y, width, height);
     // Formats gameObject to be capped out at the height it was called with
     this.width = this.height > this.width ? this.width : this.height;
-    this.playerWin = null;
+    this.playerMatches = 0;
+    this.playerFailures = 0;
+    this.playerWin;
+    this.close = false;
     this.gamePhase = 0;
+    this.priority = priority;
+    this.topTextDuringPlayerGame = "Pick two";
+    this.startGameButton = new Button(this.x, this.y, this.width * 0.4, this.width * 0.2, this.priority, "Start", 0, 0);
 
     // Formatting and positioning stuff
     this.cardSize = this.height / 5.5;
@@ -1535,10 +1544,14 @@ class MemoryPuzzle extends GameObject {
     this.tSizeTop = this.width / 11;
     this.tSizeCard = this.cardSize * 0.75;
 
+    // Just for proper formatting of title text
+    this.titleText = formatText("Win 100 cookies for winning!", this.width, this.tSizeTop / 1.5);
+
     this.topYCard = this.y - this.height * 0.41;
     this.topYText = this.y - this.height * 0.42;
+    this.bottomYText = this.y + this.height * 0.35;
     this.leftX = this.x - this.width / 2;
-    this.mouseXOffset = this.leftX + this.width / 10;
+    this.mouseXOffset = this.leftX;
     this.mouseYOffset = this.topYCard + this.height / 10;
 
     // Player input values
@@ -1546,9 +1559,11 @@ class MemoryPuzzle extends GameObject {
     this.cardMouseY;
 
     // Time values
-    this.timeToStartFlipping = millis() + 1000;
-    this.flipNextCard = millis() + 1100;
+    this.timeToStartFlipping;
+    this.flipNextCard;
     this.memoryCountdown;
+    this.flipBackOverAfterGuess;
+    this.closeGameTime;
 
     // Values that will be displayed on the cards
     this.cardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -1556,6 +1571,7 @@ class MemoryPuzzle extends GameObject {
     // Set up two arrays: one stores card values, other stores whether a card is "flipped" or not
     this.cardArray = [];
     this.cardFlipArray = [];
+    this.playerChoices = [0, [null, null], [null, null]];
     for(let i = 0; i < 4; i++) {
       this.cardArray.push([0, 0, 0, 0]);
       this.cardFlipArray.push([0, 0, 0, 0]);
@@ -1583,16 +1599,26 @@ class MemoryPuzzle extends GameObject {
     rectMode(CENTER);
     textAlign(CENTER, CENTER);
 
-    this.drawCards();
+    this.displayTextDuringGame();
+    if(this.gamePhase > 0) {
+      this.drawCards();
+      this.drawFailures();
+    }
     // Run based on current phase
     if(this.gamePhase === 0) {
-      this.runIntro();
+      this.runMenu();
     }
     if(this.gamePhase === 1) {
-      this.runMemorize();
+      this.runIntro();
     }
     if(this.gamePhase === 2) {
+      this.runMemorize();
+    }
+    if(this.gamePhase === 3) {
       this.runPlayerGame();
+    }
+    if(this.gamePhase === 4) {
+      this.runOutro();
     }
     
     
@@ -1600,40 +1626,94 @@ class MemoryPuzzle extends GameObject {
 
   drawCards() {
     textSize(this.tSizeCard);
-    for(let i = 1; i < 5; i++) {
+    for(let i = 0; i < 4; i++) {
       for(let j = 1; j < 5; j++) {
         stroke(0);
         strokeWeight(2);
-        if(this.cardMouseX === i - 1 && this.cardMouseY === j - 1) {
-          fill(170);
-        }
-        else {
-          fill(220);
-        }
-        rect(this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height, this.cardSize, this.cardSize);
-        if(this.cardFlipArray[i - 1][j - 1]) {
-          fill(0);
-          noStroke();
-          text(this.cardArray[i - 1][j - 1], this.leftX + i / 5 * this.width, this.topYCard + j / 5 * this.height);
+        if(this.cardArray[i][j - 1]) {
+          if(this.mouse && this.playerChoices[0] < 2 && this.gamePhase < 4 && this.cardMouseX === i && this.cardMouseY === j - 1) {
+            fill(170);
+          }
+          else {
+            fill(220);
+          }
+          rect(this.leftX + (i + 0.5) / 5 * this.width, this.topYCard + j / 5 * this.height, this.cardSize, this.cardSize);
+          if(this.cardFlipArray[i][j - 1]) {
+            fill(0);
+            noStroke();
+            text(this.cardArray[i][j - 1], this.leftX + (i + 0.5) / 5 * this.width, this.topYCard + j / 5 * this.height);
+          }
         }
       }
     }
   }
 
-  runIntro() {
-    // Text displayed on top
+  drawFailures() {
+    // Draws the boxes that will contain x's when the player makes a mistake
+    // Formatting
+    textSize(this.tSizeCard);
+    for(let i = 0; i < 3; i++) {
+      stroke(0);
+      strokeWeight(2);
+      fill(178, 34, 34);
+      rect(this.leftX + 0.9 * this.width, this.topYCard + (i + 1.5) / 5 * this.height, this.cardSize, this.cardSize);
+      if(this.playerFailures > i) {
+        fill(0);
+        noStroke();
+        text("X", this.leftX + 0.9 * this.width, this.topYCard + (i + 1.5) / 5 * this.height);
+      }
+    }
+  }
+
+  displayTextDuringGame() {
+    // Formatting
     fill(0);
     noStroke();
     textSize(this.tSizeTop);
-    text("Memorize!", this.x, this.topYText);
 
+    // Text displayed on top during the minigame
+    if(this.gamePhase === 0) {
+      text("Memory Game", this.x, this.topYText);
+      textSize(this.tSizeTop / 1.5);
+      text(this.titleText, this.x, this.bottomYText);
+    }
+    else if(this.gamePhase === 1) {
+      text("Memorize!", this.x, this.topYText);
+    }
+    else if(this.gamePhase === 2) {
+      // This if else switches text from black to white
+      if(Math.ceil((this.memoryCountdown - millis()) / 500) % 2) {
+        fill(255);
+      }
+      else {
+        fill(0);
+      }
+      // Tells player how many seconds left to memorize
+      text(str(Math.floor((this.memoryCountdown - millis()) / 1000)) + " Seconds!", this.x, this.topYText);
+    }
+    else if(this.gamePhase > 2) {
+      text(this.topTextDuringPlayerGame, this.x, this.topYText);
+    }
+  }
+
+  runMenu() {
+    // Run start game button. Once pressed, set times for animation and switch game phase
+    this.startGameButton.run();
+    if(this.startGameButton.alreadyClicked) {
+      this.timeToStartFlipping = millis() + 1000;
+      this.flipNextCard = millis() + 1100;
+      this.gamePhase = 1;
+    }
+  }
+
+  runIntro() {
     if(millis() > this.timeToStartFlipping) {
       if(millis() > this.flipNextCard) {
         this.cardFlipArray[this.cardToFlip % 4][Math.floor(this.cardToFlip / 4)] = 1;
         this.cardToFlip++;
         this.flipNextCard += 100;
         if(this.cardToFlip === 16) {
-          this.gamePhase = 1;
+          this.gamePhase = 2;
           this.memoryCountdown = millis() + 6000;
         }
       }
@@ -1641,37 +1721,89 @@ class MemoryPuzzle extends GameObject {
   }
 
   runMemorize() {
-    // Switches the text from black to white for effect
-    if(Math.ceil((this.memoryCountdown - millis()) / 500) % 2) {
-      fill(255);
-    }
-    else {
-      fill(0);
-    }
-    
-    // Draws the timer
-    noStroke();
-    textSize(this.tSizeTop);
-    text(str(Math.floor((this.memoryCountdown - millis()) / 1000)) + " Seconds!", this.x, this.topYText);
-    
     // Checks if timer is up. If so, flip all cards back over and go to next game phase
     if(millis() >= this.memoryCountdown) {
-      for(let i = 0; i < 4; i++) {
-        this.cardFlipArray[i] = [0, 0, 0, 0];
-      }
-      this.gamePhase = 2;
+      this.clearFlipArray();
+      this.gamePhase = 3;
     }
   }
 
   runPlayerGame() {
-    fill(0);
-    noStroke();
-    textSize(this.tSizeTop);
-    text("Coming soon lol", this.x, this.topYText);
-    if(this.mouse) {
-      this.cardMouseX = constrain(Math.floor((mouseX - this.mouseXOffset) / this.cardSizeWithGap), 0, 3);
-      this.cardMouseY = constrain(Math.floor((mouseY - this.mouseYOffset) / this.cardSizeWithGap), 0, 3);
+    if(this.mouse && this.playerChoices[0] < 2) {
+      if(this.playerFailures === 3) {
+        // If a player guesses incorrectly 3 times, set the time to close game, set the win variable to false,
+        // flip all cards over, and switch to the next game state
+        this.playerWin = false;
+        this.gamePhase = 4;
+        this.closeGameTime = millis() + 3000;
+        this.topTextDuringPlayerGame = "You lost!";
+        for(let i = 0; i < 4; i++) {
+          this.cardFlipArray[i] = [1, 1, 1, 1];
+        }
+      }
+      else if(this.playerMatches === 8) {
+        // Same as above, but win variable set to true, and prize added
+        this.playerWin = true;
+        this.gamePhase = 4;
+        this.closeGameTime = millis() + 3000;
+        this.topTextDuringPlayerGame = "You win!";
+      }
+      else {
+        // Calculate which card player is hovering on, it is darkened in drawCards()
+        this.cardMouseX = constrain(Math.floor((mouseX - this.mouseXOffset) / this.cardSizeWithGap), 0, 3);
+        this.cardMouseY = constrain(Math.floor((mouseY - this.mouseYOffset) / this.cardSizeWithGap), 0, 3);
+        if(mouseIsPressed && gMouse <= this.priority) {
+          this.cardFlipArray[this.cardMouseX][this.cardMouseY] = 1;
+          this.playerChoices[0]++;
+          this.playerChoices[this.playerChoices[0]] = [this.cardMouseX, this.cardMouseY];
+          gMouseToggle.val = this.priority + 1;
+        }
+      }
+    }
 
+    this.checkIfMatch();
+  }
+  
+  runOutro() {
+    if(millis() > this.closeGameTime) {
+      this.close = true;
+      if(this.playerWin) {
+        cookies += 100;
+      }
+    }
+  }
+
+  clearFlipArray() {
+    for(let i = 0; i < 4; i++) {
+      this.cardFlipArray[i] = [0, 0, 0, 0];
+    }
+  }
+
+  clearPlayerChoices() {
+    this.playerChoices = [0, [null, null], [null, null]];
+  }
+
+  checkIfMatch() {
+    // Once player has made two choices, see if the cards have the same value. If they do, change the top
+    // text accordingly, remove them from game and add score if they are the same, then flip all back over after 1 sec
+    if(this.playerChoices[0] === 2) {
+      if(this.cardArray[this.playerChoices[1][0]][this.playerChoices[1][1]] === this.cardArray[this.playerChoices[2][0]][this.playerChoices[2][1]]) {
+        this.topTextDuringPlayerGame = "Match!";
+        this.playerMatches++;
+        this.cardArray[this.playerChoices[1][0]][this.playerChoices[1][1]] = null;
+        this.cardArray[this.playerChoices[2][0]][this.playerChoices[2][1]] = null;
+      }
+      else {
+        this.topTextDuringPlayerGame = "Try again";
+        this.playerFailures++;
+      }
+      this.playerChoices[0]++;
+      this.flipBackOverAfterGuess = millis() + 1000;
+    }
+    else if(this.playerChoices[0] === 3 && millis() > this.flipBackOverAfterGuess) {
+      this.clearFlipArray();
+      this.clearPlayerChoices();
+      this.topTextDuringPlayerGame = "Pick two";
     }
   }
 }

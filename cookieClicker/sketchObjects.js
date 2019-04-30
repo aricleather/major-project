@@ -135,13 +135,17 @@ function initObjects() {
       this.contentToRun.push(new ImageButton(this.x - this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
         openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
         spawners.memoryPuzzle.call(openWindows[openWindows.length - 1]);
-      }, 1.05, "Click"));
-      this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
-        cookies += 10;
-      }, 1.05, "Free"));
+      }, 1.05, "Memory Game"));
+      this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
+        void 0;
+      }, 1.05, "Not done minigame"));
+      this.contentToRun.push(new ImageButton(this.x + this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
+        cookies += 10000;
+        autoCookies += 100;
+      }, 1.05, "Teacher Button"));
     },
     memoryPuzzle: function() {
-      this.contentToRun.push(new MemoryPuzzle(this.x, this.y, this.width, this.height));
+      this.contentToRun.push(new MemoryPuzzle(this.x, this.y, this.width, this.height, this.priority));
     },
   };
 
