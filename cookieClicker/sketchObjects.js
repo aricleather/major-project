@@ -137,7 +137,8 @@ function initObjects() {
         spawners.memoryPuzzle.call(openWindows[openWindows.length - 1]);
       }, 1.05, "Memory Game"));
       this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
-        void 0;
+        openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
+        spawners.rhythmGame.call(openWindows[openWindows.length - 1]);
       }, 1.05, "Not done minigame"));
       this.contentToRun.push(new ImageButton(this.x + this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
         cookies += 10000;
@@ -147,6 +148,9 @@ function initObjects() {
     memoryPuzzle: function() {
       this.contentToRun.push(new MemoryPuzzle(this.x, this.y, this.width, this.height, this.priority));
     },
+    rhythmGame: function() {
+      this.contentToRun.push(new RhythmGame(this.x, this.y, this.width, this.height, this.priority));
+    }
   };
 
 }

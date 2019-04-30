@@ -1807,3 +1807,112 @@ class MemoryPuzzle extends GameObject {
     }
   }
 }
+
+class RhythmGame extends GameObject {
+  constructor(x, y, width, height, priority) {
+    super(x, y, width, height);
+    // Vars
+    this.priority = priority;
+    this.gamePhase = 0;
+    this.close = false;
+    this.songChoice = null;
+
+    // Song data
+    this.songMetaData = [["My Name is Jonas", "Weezer"]];
+
+    // Formatting and positioning of non-game elements
+    this.tSizeTop = this.width / 20;
+    this.tSizeBottom = this.width / 50;
+    this.topY = this.y - this.height / 2;
+    this.topYText = this.y - this.height * 0.42;
+    this.bottomYText = this.y + this.height * 0.3;
+
+    // Formatting and positioning of game elements
+    this.trackBarWidth = this.width * 0.1;
+    this.trackBarBottomY = this.y + this.height * 0.3;
+    this.trackBarHeight = this.trackBarBottomY - this.topY;
+    this.trackBarPositioning = [this.x - this.trackBarWidth * 3, this.x - this.trackBarWidth * 2, this.x - this.trackBarWidth, this.x, this.x + this.trackBarWidth];
+    this.beatsToDisplay = 8;
+
+    // Interactive objects
+    this.startGameButton = new Button(this.x, this.y, this.width / 4, this.width / 8, this.priority, "Play", 0, 0);
+    this.songButtons = [];
+    this.songButtons.push(new Button(this.x, this.y - this.height * 0.1, this.width / 4, this.width / 12, this.priority, "Song name", 0, 0));
+    this.songButtons.push(new Button(this.x, this.y + this.height * 0.1, this.width / 4, this.width / 12, this.priority, "Not done", 0, 0));
+    this.songButtons.push(new Button(this.x, this.y + this.height * 0.3, this.width / 4, this.width / 12, this.priority, "Not done", 0, 0));
+  }
+
+  run() {
+    this.displayText();
+    if(this.gamePhase === 0) {
+      this.runMainMenu();
+    }
+    else if(this.gamePhase === 1) {
+      this.runSelectMenu();
+    }
+    else if(this.gamePhase === 2) {
+      this.runLoad();
+    }
+    else if(this.gamePhase === 3) {
+      this.runMainGame();
+    }
+  }
+
+  displayText() {
+    // Displays text based on gamePhase during minigame
+    // Formatting
+    textSize(this.tSizeTop);
+    noStroke();
+    fill(0);
+    if(this.gamePhase === 0) {
+      text("Rhythm Minigame", this.x, this.topYText);
+      textSize(this.tSizeBottom);
+      text("Hit notes to win cookies!", this.x, this.bottomYText);
+    }
+    else if(this.gamePhase === 1) {
+      text("Select Song", this.x, this.topYText);
+    }
+    else if(this.gamePhase === 2) {
+      text("Loading song...", this.x, this.topYText);
+      textSize(this.tSizeTop * 0.7);
+      text(this.songMetaData[this.songChoice][0] + "\nby " + this.songMetaData[this.songChoice][1], this.x, this.topYText + this.tSizeTop * 2);
+    }
+  }
+
+  runMainMenu() {
+    // Runs play button, switches game phase when clicked
+    this.startGameButton.run();
+    if(this.startGameButton.alreadyClicked) {
+      this.gamePhase = 1;
+    }
+  }
+
+  runSelectMenu() {
+    // Runs buttons allowing selection of song
+    for(let i = 0; i < this.songButtons.length; i++) {
+      this.songButtons[i].run();
+      if(this.songButtons[i].alreadyClicked && i === 0) {
+        this.songChoice = i;
+        this.gamePhase = 2;
+      }
+    }
+  }
+
+  runLoad() {
+    this.gamePhase = 3;
+  }
+
+  runMainGame() {
+    stroke(0);
+    strokeWeight(3);
+    strokeCap(SQUARE);
+    fill(0);
+    for(let i = 0; i < 5; i++) {
+      line(this.trackBarPositioning[i], this.topY, this.trackBarPositioning[i], this.trackBarBottomY);
+    }
+    for(let i = 0; i < this.beatsToDisplay; i++) {
+      let tempY = this.topY + this.trackBarHeight * (i + 1) / this.beatsToDisplay;
+      line(this.trackBarPositioning[0], tempY, this.trackBarPositioning[4], tempY);
+    }
+  }
+}
