@@ -967,6 +967,7 @@ class BackgroundBox extends GameObject {
   }
 
   run() {
+    // Run a small box open animation before running box content, block mouse clicks throughout
     if(this.open) {
       this.openAnimation();
       gMouseToggle.val = this.priority + 1;
@@ -1026,55 +1027,52 @@ class BackgroundBox extends GameObject {
     }
   }
 
-  resize(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+    console.log(this.x, this.y, this.width, this.height);
   }
 }
 
 class InventoryScreen extends GameObject {
-  constructor(x, y, width, rgb, priority, cols, rows) {
+  constructor(x, y, width, height, priority, theInventory) {
     // Vars
-    super(x, y, width, width / cols * rows);
-    this.cols = cols;
-    this.rows = rows;
+    super(x, y, width, height);
+
+    // When constructed, give it a global inventory to work with
+    this.itemArr = theInventory;
+    // Get inventory size from inventory. Assumes each row is same size (it should be)
+    this.rows = this.itemArr.length;
+    this.cols = this.itemArr[0].length;
     this.mouseXPos = null;
     this.mouseYPos = null;
     this.mouseHeldItem = null;
-
+    
+    // Resize self to perfectly fit the inventory and stay within parent box
+    this.boxSize = this.height / this.rows;
+    this.boxSizeOffset = this.boxSize / 2;
+    if(this.boxSize * this.cols < this.width) {
+      this.width = this.boxSize * this.cols;
+      openWindows[0].resize(0, 0, this.width, 0);
+    }
+    
     // Somewhere to put the inventory screen
-    this.box = new BackgroundBox(this.x, this.y, this.width, this.height, rgb, priority, "click");
     this.optionsBox = new OptionsBox(300, 300, 100, 150, priority + 1, ["Info", "Move", "Upgrade"]);
-    this.upgradeBox;
-    this.clickedItemCoords = null;
+    this.clickedItemCoords = [];
     this.toggleOptionsBox = false;
     this.priority = priority;
 
-    // Corner useful for the for loop drawing the 2d array and checking what box mouse is in
+    // Corner data useful for the for loop drawing the 2d array and checking what box mouse is in
     this.leftX = this.x - this.width / 2;
     this.rightX = this.x + this.width / 2;
     this.topY = this.y - this.height / 2;
     this.bottomY = this.y + this.height / 2;
-
-    // Box size for calculating what box mouse is in
-    this.boxSize = this.width / cols;
-    this.boxSizeOffset = this.boxSize / 2;
-
-    this.itemArr = [];
-    for(let i = 0; i < rows; i++) {
-      let emptyArr = [];
-      for(let j = 0; j < cols; j++) {
-        emptyArr.push(0);
-      }
-      this.itemArr.push(emptyArr);
-    }
   }
 
   run() {
     this.calcMouse();
-    this.box.run();
 
     // Draw the lines separating each item box
     stroke(0, 200);
@@ -1137,15 +1135,14 @@ class InventoryScreen extends GameObject {
       this.runOptionsBox();
     }
 
-    if(this.box.close && !this.toggleOptionsBox && gMouse <= this.priority) {
-      console.log(this.box.close);
+    if(mouseIsPressed && !this.toggleOptionsBox && gMouse <= this.priority) {
       closeInventory();
       // So it doesn't auto-close next time
-      this.box.close = false;
 
       // If the user was holding an item when the box was closed, put it back where it was
       // Possible because when an item is picked up it is given "pickedUpFrom" attribute
       if(this.mouseHeldItem) {
+        console.log(gMouse + " " + this.priority);
         this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
         this.mouseHeldItem = 0;
       }

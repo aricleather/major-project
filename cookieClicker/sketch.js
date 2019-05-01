@@ -176,7 +176,7 @@ function loadSaveFile() {
     factoryObj.saveLoad(window.localStorage.getItem("factory").split(","));
     woodenSwordObj.saveLoad(window.localStorage.getItem("woodenSword").split(","));
     // Loading the playerInventory
-    playerInventory.saveLoad(window.localStorage.getItem("playerInventory"));
+    // playerInventory.saveLoad(window.localStorage.getItem("playerInventory"));
   }
 }
 
@@ -195,7 +195,7 @@ function saveGame() {
     window.localStorage.setItem("factory", [factoryObj.price, factoryObj.owned]);
     window.localStorage.setItem("woodenSword", [woodenSwordObj.price, woodenSwordObj.owned]);
     // Saving the playerInventory
-    window.localStorage.setItem("playerInventory", playerInventory.extractDataForSave());
+    // window.localStorage.setItem("playerInventory", playerInventory.extractDataForSave());
   }
 }
 
