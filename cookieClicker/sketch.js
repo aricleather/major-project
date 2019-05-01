@@ -71,7 +71,7 @@ function cookieIncrement() {
 
 // Load content used in game
 let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade, goldStar; // Images
-let coinSound, popSound, textBlip; // Sounds
+let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
 // Position / scaling variables
@@ -132,6 +132,7 @@ function preload() {
   buttonSelect1 = loadSound("assets/buttonSelect1.wav");
   errorSound = loadSound("assets/error.wav");
   purchaseSound = loadSound("assets/purchase.wav");
+  myNameIsJonasSong = loadSound("assets/myNameIsJonas.wav");
 }
 
 function setup() {

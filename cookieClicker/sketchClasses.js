@@ -1816,9 +1816,12 @@ class RhythmGame extends GameObject {
     this.gamePhase = 0;
     this.close = false;
     this.songChoice = null;
+    this.currentScore = 0;
 
     // Song data
     this.songMetaData = [["My Name is Jonas", "Weezer"]];
+    this.loadedSong = null;
+    this.currentNotes = [];
 
     // Formatting and positioning of non-game elements
     this.tSizeTop = this.width / 20;
@@ -1828,11 +1831,21 @@ class RhythmGame extends GameObject {
     this.bottomYText = this.y + this.height * 0.3;
 
     // Formatting and positioning of game elements
-    this.trackBarWidth = this.width * 0.1;
-    this.trackBarBottomY = this.y + this.height * 0.3;
-    this.trackBarHeight = this.trackBarBottomY - this.topY;
-    this.trackBarPositioning = [this.x - this.trackBarWidth * 3, this.x - this.trackBarWidth * 2, this.x - this.trackBarWidth, this.x, this.x + this.trackBarWidth];
     this.beatsToDisplay = 8;
+    this.trackBarWidth = this.width * 0.1;
+    this.trackBarTopY = this.y - this.height * 0.45;
+    this.trackBarBottomY = this.y + this.height * 0.45;    
+    this.trackBarHeight = this.trackBarBottomY - this.trackBarTopY;
+    this.trackBarCellHeight = this.height * 1 / 9;
+    this.trackBarPositioning = [this.x - this.trackBarWidth * 3, this.x - this.trackBarWidth * 2, this.x - this.trackBarWidth, this.x, this.x + this.trackBarWidth];
+    this.trackBarInputY = this.trackBarTopY + this.trackBarHeight - this.trackBarCellHeight;
+
+    // Timing
+    this.startSongTime;
+    this.closeGameTime;
+    this.noteUpdateInterval;
+    this.ticks = 0;
+    this.currentTickTime;
 
     // Interactive objects
     this.startGameButton = new Button(this.x, this.y, this.width / 4, this.width / 8, this.priority, "Play", 0, 0);
@@ -1840,6 +1853,12 @@ class RhythmGame extends GameObject {
     this.songButtons.push(new Button(this.x, this.y - this.height * 0.1, this.width / 4, this.width / 12, this.priority, "Song name", 0, 0));
     this.songButtons.push(new Button(this.x, this.y + this.height * 0.1, this.width / 4, this.width / 12, this.priority, "Not done", 0, 0));
     this.songButtons.push(new Button(this.x, this.y + this.height * 0.3, this.width / 4, this.width / 12, this.priority, "Not done", 0, 0));
+    this.keyMap = new Map();
+
+    // Event listener and interval IDs so I can clear them later
+    this.interval_id;
+    this.eventlistener1_id;
+    this.eventlistener2_id;
   }
 
   run() {
@@ -1855,6 +1874,9 @@ class RhythmGame extends GameObject {
     }
     else if(this.gamePhase === 3) {
       this.runMainGame();
+    }
+    else if(this.gamePhase === 4) {
+      this.runRewards();
     }
   }
 
@@ -1876,6 +1898,20 @@ class RhythmGame extends GameObject {
       text("Loading song...", this.x, this.topYText);
       textSize(this.tSizeTop * 0.7);
       text(this.songMetaData[this.songChoice][0] + "\nby " + this.songMetaData[this.songChoice][1], this.x, this.topYText + this.tSizeTop * 2);
+    }
+    else if(this.gamePhase === 3) {
+      textSize(this.tSizeBottom);
+      if(millis() < this.startSongTime) {
+        text("Start in:\n" + str(Math.ceil((this.startSongTime - millis()) / 1000)), this.x + this.width * 0.3, this.y);
+      }
+      else {
+        text("Score: " + str(this.currentScore), this.x + this.width * 0.3, this.y);
+      }
+    }
+    else if(this.gamePhase === 4) {
+      text("Congratulations!", this.x, this.topYText);
+      textSize(this.tSizeBottom * 1.5); 
+      text("You won " + str(this.currentScore) + " cookies!", this.x, this.y);
     }
   }
 
@@ -1899,20 +1935,158 @@ class RhythmGame extends GameObject {
   }
 
   runLoad() {
+    // Load the song, set up the event listeners which will handle key presses
+    // I am using bind here so that the functions are called in the scope of the rhythm game
+    // object, as opposed to the scope of "window"
+    this.loadedSong = songs.myNameIsJonas;
+    this.noteUpdateInterval = 1 / (this.loadedSong.bpm / 60) * 1000;
+    // Also, setting these while also setting them as vars so I can save the ids so these
+    // things are deleteable later
+    this.interval_id = window.setInterval(this.updateNotes.bind(this), this.noteUpdateInterval);
+    this.eventlistener1_id = window.addEventListener("keydown", this.keyPress.bind(this));
+    this.eventlistener2_id = window.addEventListener("keyup", this.keyLift.bind(this));
     this.gamePhase = 3;
+    this.startSongTime = millis() + 3000;
+    myNameIsJonasSong.play(3);
   }
 
   runMainGame() {
+    noStroke();
+    strokeWeight(0);
+    fill("green");
+    rectMode(CORNER);
+    // Fills in the input spaces with colour when the corresponding key is being pressed
+    for(let theKey of this.keyMap.keys()) {
+      if(theKey === "1") {
+        rect(this.trackBarPositioning[0], this.trackBarInputY, this.trackBarWidth, this.trackBarCellHeight);
+      }
+      else if(theKey === "2") {
+        rect(this.trackBarPositioning[1], this.trackBarInputY, this.trackBarWidth, this.trackBarCellHeight);
+      }
+      else if(theKey === "3") {
+        rect(this.trackBarPositioning[2], this.trackBarInputY, this.trackBarWidth, this.trackBarCellHeight);
+      }
+      else if(theKey === "4") {
+        rect(this.trackBarPositioning[3], this.trackBarInputY, this.trackBarWidth, this.trackBarCellHeight);
+      }
+    }
+
+    fill(10, 240);
+    // Fills in spaces with black notes as they should appear
+    for(let i = 0; i < 7; i++) {
+      if(this.currentNotes[i] && this.currentNotes[i][0] !== null) {
+        for(let note of this.currentNotes[i]) {
+          let tempY = this.trackBarTopY + this.trackBarHeight * i / this.beatsToDisplay;
+          rect(this.trackBarPositioning[note], tempY, this.trackBarWidth, this.trackBarCellHeight);
+        }
+      }
+    }
+
     stroke(0);
     strokeWeight(3);
     strokeCap(SQUARE);
     fill(0);
+    // Vertical lines
     for(let i = 0; i < 5; i++) {
-      line(this.trackBarPositioning[i], this.topY, this.trackBarPositioning[i], this.trackBarBottomY);
+      line(this.trackBarPositioning[i], this.trackBarTopY, this.trackBarPositioning[i], this.trackBarBottomY);
     }
-    for(let i = 0; i < this.beatsToDisplay; i++) {
-      let tempY = this.topY + this.trackBarHeight * (i + 1) / this.beatsToDisplay;
+    // Horizontal lines
+    for(let i = 0; i < this.beatsToDisplay + 1; i++) {
+      let tempY = this.trackBarTopY + this.trackBarHeight * i / this.beatsToDisplay;
       line(this.trackBarPositioning[0], tempY, this.trackBarPositioning[4], tempY);
     }
   }
+
+  runRewards() {
+    if(millis() > this.closeGameTime) {
+      cookies += this.currentScore;
+      this.close = true;
+    }
+  }
+
+  updateNotes() {
+    // This ensures the first note crosses the line the second the song starts
+    if(this.startSongTime - this.noteUpdateInterval * 8 < millis()) {
+      let startTick = this.ticks - 8 >= 0 ? this.ticks - 8 : 0;
+      // Use slice to get the chunk of notes that should currently be displayed
+      this.currentNotes = this.loadedSong.noteArr.slice(startTick, this.ticks + 1);
+      // This function also handles finishing the song
+      if(this.ticks - this.loadedSong.noteArr.length > 8) {
+        // Sets close game time, clears interval and listeners, stops song playing, switches gamePhase
+        this.closeGameTime = millis() + 5000;
+        window.clearInterval(this.interval_id);
+        window.removeEventListener("keydown", this.eventlistener1_id);
+        window.removeEventListener("keyup", this.eventlistener2_id);
+        myNameIsJonasSong.stop();
+        this.gamePhase = 4;
+      }
+      // If the song is done, push null so the notes keep moving until the song is done
+      else if(this.ticks > this.loadedSong.noteArr.length) {
+        for(let i = 0; i < this.ticks - this.loadedSong.noteArr.length; i++) {
+          this.currentNotes.push([null]);
+        }
+      }
+      // Reverse it so the notes move DOWN the board, not up
+      this.currentNotes.reverse();
+      this.ticks++;
+      this.currentTickTime = millis();
+      this.checkNoteHit();
+
+    }
+    // Then we are going to check if the player hit the last note
+  }
+
+  checkNoteHit() {
+    // Fetch last note
+    let notesToHit = this.currentNotes[7] ? this.currentNotes[7] : [null];
+    if(notesToHit[0] !== null) {
+      let scoreGainedThisTick = 0;
+      // For each note in the last note
+      for(let note of notesToHit) {
+        // If that note exists in the key map (first note is 0, but in the key map it shows up as "1", hence str(note+1))
+        if(this.keyMap.has(str(note + 1))) {
+          // See if it was hit soon enough
+          let timeDifference = Math.abs(this.keyMap.get(str(note + 1)) - this.currentTickTime);
+          console.log(timeDifference);
+          if(timeDifference < 75) {
+            // Add some score if so
+            scoreGainedThisTick += 50;
+          }
+        }
+      }
+      this.currentScore += scoreGainedThisTick;
+    }
+  }
+
+  keyPress() {
+    // In keyMap, keep track of what buttons are pressed and when they were pressed
+    // This is used in the minigame to check if the buttons are pressed at the right time
+    if(!this.keyMap.has(event.key)) {
+      this.keyMap.set(event.key, millis());
+    } 
+  }
+
+  keyLift() {
+    // Once a key is lifted, delete it from keyMap
+    this.keyMap.delete(event.key);
+  }
 }
+
+let songs = {
+  myNameIsJonas: {
+    bpm: 372,
+    noteArr: [[1], [3], [2], [1], [3], [2],
+      [0], [2], [1], [0], [3], [2],
+      [1], [3], [2], [1], [3], [2], 
+      [0], [2], [1], [0], [3], [2],
+      [1], [3], [2], [1], [3], [2],
+      [0], [2], [1], [0], [3], [2],
+      [1], [3], [2], [1], [3], [2], 
+      [0], [2], [1], [0], [3], [2],
+      [2, 3], [null], [2, 3], [null], [2, 3], [null],
+      [1, 3], [null], [1, 3], [null], [1, 3], [null],
+      [1, 2], [null], [1, 2], [null], [1, 2], [null],
+      [0, 2], [null], [0, 2], [null], [0, 2], [null],
+    ],
+  },
+};

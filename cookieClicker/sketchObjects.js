@@ -139,7 +139,7 @@ function initObjects() {
       this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
         openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
         spawners.rhythmGame.call(openWindows[openWindows.length - 1]);
-      }, 1.05, "Not done minigame"));
+      }, 1.05, "Rhythm Game"));
       this.contentToRun.push(new ImageButton(this.x + this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
         cookies += 10000;
         autoCookies += 100;
@@ -166,6 +166,7 @@ function resizeObjects() {
   openAchievementsButton.resize(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
   closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
   inventoryOpenButton.resize(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  miniGamesButton.resize(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
