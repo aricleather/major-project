@@ -270,6 +270,8 @@ function menu() { // gameState 0
     titleNewGameButton.run();
   }
   titleOptionsButton.run();
+  textSize(15);
+  text("Version 0.1", width * 0.93, height * 0.97);
   // If save file was stored as cookie in browser, show load option
 }
 
