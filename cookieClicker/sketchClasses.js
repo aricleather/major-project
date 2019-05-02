@@ -1058,7 +1058,6 @@ class InventoryScreen extends GameObject {
       openWindows[0].resize(0, 0, this.width, 0);
     }
     
-    // Somewhere to put the inventory screen
     this.optionsBox = new OptionsBox(300, 300, 100, 150, priority + 1, ["Info", "Move", "Upgrade"]);
     this.clickedItemCoords = [];
     this.toggleOptionsBox = false;

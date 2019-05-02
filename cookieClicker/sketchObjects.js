@@ -207,6 +207,6 @@ function resizeObjects() {
   // Exp bars
   playerExpBar.resize(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02);
 
-  playerInventory.resize(width / 2, height * 0.22, 400);
+  // playerInventory.resize(width / 2, height * 0.22, 400);
 }
 
