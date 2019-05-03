@@ -104,6 +104,7 @@ function initObjects() {
 
   // Shop weapon objects
   woodenSwordObj = new ShopWeaponObject(woodenSword, "Wooden Sword", "Breaks easily, but leaves splinters.", 100, 5, "Attack");
+  stoneAxeObj = new ShopWeaponObject(stoneAxe, "Stone Axe", "Packs a heavy punch while remaining durable.", 1000, 20, "Attack");
 
   // Dialog objects
   returnToMenuDialog = new DialogBox("Go back to main menu?", 1, "Yes", "No", function() {
@@ -157,6 +158,11 @@ function initObjects() {
     rhythmGame: function() {
       this.contentToRun.push(new RhythmGame(this.x, this.y, this.width, this.height, this.priority));
     },
+    inventoryContextMenu: function() {
+      this.contentToRun.push(new Button(this.x, this.y - this.height * 2/6, this.width, this.height / 3, this.priority, "Info", this.parent.mousePickUpItem.bind(this.parent), 0));
+      this.contentToRun.push(new Button(this.x, this.y, this.width, this.height / 3, this.priority, "Move", 0, 0));
+      this.contentToRun.push(new Button(this.x, this.y + this.height * 2/6, this.width, this.height / 3, this.priority, "Upgrade", 0, 0));
+    }
   };
 
 }
@@ -185,6 +191,7 @@ function resizeObjects() {
   bakeryObj.resize();
   factoryObj.resize();
   woodenSwordObj.resize();
+  stoneAxeObj.resize();
 
   // Same with achievements
   achievements.clicks.obj.resize();

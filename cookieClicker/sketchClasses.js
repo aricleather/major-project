@@ -955,7 +955,7 @@ class ExperienceBar extends GameObject {
 }
 
 class BackgroundBox extends GameObject {
-  constructor(x, y, width, height, rgb, priority, mode) {
+  constructor(x, y, width, height, rgb, priority, mode, parent = 0) {
     super(x, y, width, height);
     this.rgb = rgb;
     this.priority = priority;
@@ -964,6 +964,7 @@ class BackgroundBox extends GameObject {
     this.animFrames = 1;
     this.mode = mode;
     this.contentToRun = [];
+    this.parent = parent || 0;
   }
 
   run() {
@@ -1032,7 +1033,6 @@ class BackgroundBox extends GameObject {
     this.y = y || this.y;
     this.width = width || this.width;
     this.height = height || this.height;
-    console.log(this.x, this.y, this.width, this.height);
   }
 }
 
@@ -1057,8 +1057,7 @@ class InventoryScreen extends GameObject {
       this.width = this.boxSize * this.cols;
       openWindows[0].resize(0, 0, this.width, 0);
     }
-    
-    this.optionsBox = new OptionsBox(300, 300, 100, 150, priority + 1, ["Info", "Move", "Upgrade"]);
+
     this.clickedItemCoords = [];
     this.toggleOptionsBox = false;
     this.priority = priority;
@@ -1096,161 +1095,38 @@ class InventoryScreen extends GameObject {
     }
 
     // Display meta text in a text box if an item is in a slot
-    if(this.mouse) {
+    if(this.mouse && gMouse <= this.priority) {
       // Calculate what box is the mouse inside
       this.mouseXPos = constrain(Math.floor((mouseX - this.leftX) / this.boxSize), 0, this.cols - 1);
       this.mouseYPos = constrain(Math.floor((mouseY - this.topY) / this.boxSize), 0, this.rows - 1);
-      if(!mouseIsPressed && !this.mouseHeldItem && !this.toggleOptionsBox & !this.upgradeBox) {     
+      if(!mouseIsPressed && !this.mouseHeldItem) {     
         if(this.itemArr[this.mouseYPos][this.mouseXPos]) {
           let hoveredThing = this.itemArr[this.mouseYPos][this.mouseXPos];
           displayTextBox(hoveredThing.metaText, mouseX, mouseY);
         }
       }
 
-      else if(!this.toggleOptionsBox && !this.upgradeBox && this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && gMouse === this.priority) {
-        this.optionsBox.moveBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos);
+      else if(this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && !openWindows[1]) {
+        openWindows.push(new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, [63, 102, 141, 250], this.priority + 1, "hover", this));
+        spawners.inventoryContextMenu.call(openWindows[1]);
         this.toggleOptionsBox = 1;
         // So that the item that was clicked is still known, mouse may move off of it
         this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
         gMouseToggle.val = this.priority + 1;
       }
-    }
 
-    if(this.mouseHeldItem) {
-      image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
-      if(this.mouse && mouseIsPressed && gMouse === this.priority) {
-        this.mouseDropItem(this.mouseYPos, this.mouseXPos);
-        gMouseToggle.val = this.priority + 1;
-      }
-    }
-
-    // If options box is toggled and it isn't being closed, run the optionsBox
-    
-    if(this.upgradeBox) {
-      this.runUpgradeBox();
-    }
-
-    if(this.toggleOptionsBox) {
-      this.runOptionsBox();
-    }
-
-    if(mouseIsPressed && !this.toggleOptionsBox && gMouse <= this.priority) {
-      closeInventory();
-      // So it doesn't auto-close next time
-
-      // If the user was holding an item when the box was closed, put it back where it was
-      // Possible because when an item is picked up it is given "pickedUpFrom" attribute
-      if(this.mouseHeldItem) {
-        console.log(gMouse + " " + this.priority);
-        this.itemArr[this.mouseHeldItem.pickedUpFrom[0]][this.mouseHeldItem.pickedUpFrom[1]] = this.mouseHeldItem;
-        this.mouseHeldItem = 0;
+      else {
+        checkContextMenu();
       }
     }
   }
 
-  runOptionsBox() {
-    // Actually run the box
-    this.optionsBox.run();
-
-    // If info button pressed...
-    if(this.optionsBox.buttonPressed === 0) {
-      console.log("Not yet");
-      this.resetOptionsBox();
-    }
-
-    // If move button pressed pick up the item at location that was stored in clickedItemCoords
-    else if(this.optionsBox.buttonPressed === 1) {
-      this.mousePickUpItem(this.clickedItemCoords[0], this.clickedItemCoords[1]);
-      this.resetOptionsBox();
-      gMouseToggle.val = this.priority + 1;
-    }
-
-    // If upgrade button pressed open upgrade menu with item that was stored in clickedItemCoords
-    else if(this.optionsBox.buttonPressed === 2) {
-      this.upgradeBox = new UpgradeMenu(this.x, this.y, this.width * 0.8, this.height * 0.8, [63, 102, 141, 255], this.priority + 1, this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]]);
-      this.resetOptionsBox();
-      gMouseToggle.val = this.priority + 1;
-    }
-
-    // Once options box is closed due to whatever reason, un-toggle it and reset it
-    if(this.optionsBox.close) {
-      this.toggleOptionsBox = 0;
-      this.optionsBox.mouseHasEnteredBox = false;
-      this.optionsBox.close = false;
-      this.optionsBox.buttonPressed = null;
-    }
+  mousePickUpItem() {
+    console.log(this.clickedItemCoords);
   }
 
-  runUpgradeBox() {
-    this.upgradeBox.run();
-    if(this.upgradeBox.close) {
-      this.upgradeBox = null;
-    }
-  }
-
-  resetOptionsBox() {
-    this.toggleOptionsBox = 0;
-    this.optionsBox.mouseHasEnteredBox = false;
-    this.optionsBox.close = false;
-    this.optionsBox.buttonPressed = null;
-  }
-
-  mousePickUpItem(row, col) {
-    // If the user isn't holding an item and the mouse is pressed, pick it up
-    this.mouseHeldItem = this.itemArr[row][col];
-    this.mouseHeldItem.pickedUpFrom = [row, col];
-    this.itemArr[row][col] = 0;
-    gMouseToggle.val = this.priority + 1;
-  }
-
-  mouseDropItem() {
-    // If the user is holding an item and mouse is pressed, put it where the mouse is
-    this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
-    this.mouseHeldItem = 0;
-    gMouseToggle.val = this.priority + 1;
-  }
-
-  addItem(item) {
-    // When called, puts item into first unused slot
-    let slot = this.firstUnusedSlot();
-    this.itemArr[slot[0]][slot[1]] = item;
-  }
-
-  firstUnusedSlot() {
-    // Returns array with [row, column] of first empty slot in this.itemArr
-    for(let i = 0; i < this.rows; i++) {
-      for(let j = 0; j < this.cols; j++) {
-        if(this.itemArr[i][j] === 0) {
-          return [i, j];
-        }
-      }
-    }
-    return false;
-  }
-
-  extractDataForSave() {
-    // Saves as [xpos, ypos, itemName; xpos, ypos, itemName;] etc.. in a string
-    let returnString = "";
-    for(let i = 0; i < this.rows; i++) {
-      for(let j = 0; j < this.cols; j++) {
-        if(this.itemArr[i][j].type === "weapon") {
-          returnString += str(i) + "," + str(j) + "," + this.itemArr[i][j].name + ";";
-        }
-      }
-    }
-    return returnString;
-  }
-
-  saveLoad(data) {
-    // Breaks up data as it is expected from extractDataForSave in a string
-    data = data.split(";");
-    data.pop();
-    let itemCount = data.length;
-    for(let i = 0; i < itemCount; i++) {
-      // Spawn an identical copy of that item given theItem in data
-      let theItem = data[i].split(",");
-      this.itemArr[int(theItem[0])][int(theItem[1])] = spawnItem(theItem[2]);
-    }
+  checkContextMenu() {
+    void 0;
   }
 
   resize(x, y, width) {
@@ -1266,8 +1142,6 @@ class InventoryScreen extends GameObject {
 
     this.boxSize = this.width / this.cols;
     this.boxSizeOffset = this.boxSize / 2;
-
-    this.box.resize(this.x, this.y, this.width, this.height);
   }
 }
 
@@ -2086,3 +1960,67 @@ let songs = {
     ],
   },
 };
+
+class Message {
+  constructor(message, preFunc = 0, postFunc = 0) {
+    this.message = message;
+    this.preFunc = preFunc;
+    this.postFunc = postFunc;
+  }
+}
+
+class TextBox extends GameObject {
+  constructor(x, y, width, height, priority, messageArr, tSize, id, whileFunc = 0) {
+    super(x, y, width, height);
+    // Vars
+    this.priority = priority;
+    this.messageArr = messageArr;
+    this.tSize = tSize;
+    this.id = id;
+    this.whileFunc = whileFunc;
+    // Allows the writing of string to screen letter by letter
+    this.messageBeingWritten = "";
+    // Formatting stuff
+    this.leftX = this.x - this.width / 2;
+    this.topY = this.y - this.height / 2;
+    // For when all the text is exhausted
+    this.close = false;
+  }
+ 
+  run() {
+    this.calcMouse();
+    if(this.whileFunc) {
+      this.whileFunc();
+    }
+    // Formatting
+    rectMode(CENTER);
+    stroke(255);
+    fill(0);
+    textAlign(LEFT, CENTER);
+    textSize(this.tSize);
+   
+    // Draw the rectangle
+    rect(this.x, this.y, this.width, this.height);
+
+    // Add new letter every frame until all letters added
+    if(this.messageBeingWritten.length !== this.messageArr[0].message.length) {
+      this.messageBeingWritten += this.messageArr[0].message[this.messageBeingWritten.length];
+    }
+
+    // Draw text at current length, if box clicked on switch to next message,
+    // else delete self from text boxes map
+    noStroke();
+    fill(255);
+    text(this.messageBeingWritten, this.leftX + 5, this.topY + this.tSize / 2 + 5);
+    if(mouseIsPressed && this.mouse && gMouse <= this.priority) {
+      this.messageBeingWritten = "";
+      gMouseToggle.val = this.priority + 1;
+      if(this.messageArr[1]) {
+        this.messageArr = this.messageArr.slice(1);
+      }
+      else {
+        openTextBoxes.delete(this.id);
+      }
+    }
+  }
+}

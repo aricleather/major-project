@@ -51,6 +51,7 @@ let gMouseToggle = {
 };
 
 let gMouse = 0;
+this.openTextBoxes = new Map();
 let currentDialog = [];
 let input = null;
 
@@ -70,7 +71,7 @@ function cookieIncrement() {
 }
 
 // Load content used in game
-let cookie, coin, oven, bakery, factory, rightArrow, gameCursor, clickUpgrade, goldStar; // Images
+let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar; // Images
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
@@ -118,6 +119,7 @@ function preload() {
   clickUpgrade = loadImage("assets/clickUpgrade.png");
   goldStar = loadImage("assets/goldStar.png");
   woodenSword = loadImage("assets/woodenSword.png");
+  stoneAxe = loadImage("assets/stoneAxe.png");
   inventoryButton = loadImage("assets/invButton.png");
   minigameIcon = loadImage("assets/minigameIcon.png");
 
@@ -255,6 +257,10 @@ function draw() {
   if(input) {
     input.run();
   }
+  for(let key of openTextBoxes.keys()) {
+    openTextBoxes.get(key).run();
+  }
+
   globalMessage.run();
   displayAnimation();
   gMouseToggle.end();
@@ -429,6 +435,7 @@ function shop() {
 
     rect(width * 0.85, height / 2, width * 0.3, height);
     woodenSwordObj.run();
+    stoneAxeObj.run();
     shopWeaponScrollBar.run();
   }
 
