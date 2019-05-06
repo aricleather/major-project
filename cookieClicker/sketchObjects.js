@@ -74,12 +74,14 @@ function initObjects() {
     achievementState = 0;
   }, 1.05, "Close");
   inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, inventoryButton, function() {
-    openWindows.push(new BackgroundBox(width / 2, height * 0.22, 400, 200, [63, 102, 141, 200], 1, "click"));
-    spawners.playerInventory.call(openWindows[0]);
+    let tempId = openWindowIdCounter.val;
+    openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
+    spawners.playerInventory.call(openWindows.get(tempId));
   }, 1.05, "Items");
   miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
-    openWindows.push(new BackgroundBox(width / 2, height * 0.22, 400, 200, [63, 102, 141, 200], 1, "click"));
-    spawners.minigames.call(openWindows[0]);
+    let tempId = openWindowIdCounter.val;
+    openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
+    spawners.minigames.call(openWindows.get(tempId));
   }, 1.05, "Minigames");
 
   // Tab buttons
@@ -136,16 +138,18 @@ function initObjects() {
 
   spawners = {
     playerInventory: function() {
-      this.contentToRun.push(new InventoryScreen(width / 2, height * 0.22, 400, 200, 1, tempInventory));
+      this.contentToRun.push(new InventoryScreen(width / 2, height * 0.22, 400, 200, this.id, 1, tempInventory));
     },
     minigames: function() {
       this.contentToRun.push(new ImageButton(this.x - this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
-        openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
-        spawners.memoryPuzzle.call(openWindows[openWindows.length - 1]);
+        let tempId = openWindowIdCounter.val;
+        openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.3, 800, 400, tempId, [63, 102, 141, 250], this.priority + 1, "click"));
+        spawners.memoryPuzzle.call(openWindows.get(tempId));
       }, 1.05, "Memory Game"));
       this.contentToRun.push(new ImageButton(this.x, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
-        openWindows.push(new BackgroundBox(width / 2, height * 0.3, 800, 400, [63, 102, 141, 250], this.priority + 1, "click"));
-        spawners.rhythmGame.call(openWindows[openWindows.length - 1]);
+        let tempId = openWindowIdCounter.val;
+        openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.3, 800, 400, tempId, [63, 102, 141, 250], this.priority + 1, "click"));
+        spawners.rhythmGame.call(openWindows.get(tempId));
       }, 1.05, "Rhythm Game"));
       this.contentToRun.push(new ImageButton(this.x + this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, cookie, function() {
         cookies += 10000;

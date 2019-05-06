@@ -18,7 +18,7 @@ let playerLevel = 1;
 let playerExpToNextLevel = [10, 20, 40, 80];
 
 let currentInv = null;
-let openWindows = [];
+let openWindows = new Map();
 
 let saveFile;
 let gMouseToggle = {
@@ -48,6 +48,14 @@ let gMouseToggle = {
   get bound() {
     return this._bound;
   },
+};
+
+let openWindowIdCounter = {
+  _val: 0,
+  get val() {
+    this._val++;
+    return this._val;
+  }
 };
 
 let gMouse = 0;
@@ -303,10 +311,10 @@ function mainGame() { // gameState 1
     openAchievementsButton.run();
   }
   displayPlayerData();
-  for(let i = 0; i < openWindows.length; i++) {
-    openWindows[i].run();
-    if (openWindows[i].close) {
-      openWindows.splice(i, 1);
+  for(let key of openWindows.keys()) {
+    openWindows.get(key).run();
+    if (openWindows.get(key).close) {
+      openWindows.delete(key);
     }
   }
 }

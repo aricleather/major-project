@@ -955,11 +955,13 @@ class ExperienceBar extends GameObject {
 }
 
 class BackgroundBox extends GameObject {
-  constructor(x, y, width, height, rgb, priority, mode, parent = 0) {
+  constructor(x, y, width, height, id, rgb, priority, mode, parent = 0) {
     super(x, y, width, height);
+    this.id = id;
     this.rgb = rgb;
     this.priority = priority;
     this.close = false;
+    this.hovered = false;
     this.open = true;
     this.animFrames = 1;
     this.mode = mode;
@@ -970,7 +972,12 @@ class BackgroundBox extends GameObject {
   run() {
     // Run a small box open animation before running box content, block mouse clicks throughout
     if(this.open) {
-      this.openAnimation();
+      if(this.mode === "click") {
+        this.openAnimation();
+      }
+      else{
+        this.open = false;
+      }
       gMouseToggle.val = this.priority + 1;
     }
     else {
@@ -994,7 +1001,13 @@ class BackgroundBox extends GameObject {
         }
       }
       else if(this.mode === "hover") {
-        if(!this.mouse) {
+        if(!this.hovered && this.mouse) {
+          this.hovered = true;
+        }
+        else if(!this.hovered && mouseIsPressed) {
+          this.close = true;
+        }
+        else if(this.hovered && !this.mouse) {
           this.close = true;
         }
         else {
@@ -1037,9 +1050,10 @@ class BackgroundBox extends GameObject {
 }
 
 class InventoryScreen extends GameObject {
-  constructor(x, y, width, height, priority, theInventory) {
+  constructor(x, y, width, height, boxId, priority, theInventory) {
     // Vars
     super(x, y, width, height);
+    this.id = boxId;
 
     // When constructed, give it a global inventory to work with
     this.itemArr = theInventory;
@@ -1055,7 +1069,7 @@ class InventoryScreen extends GameObject {
     this.boxSizeOffset = this.boxSize / 2;
     if(this.boxSize * this.cols < this.width) {
       this.width = this.boxSize * this.cols;
-      openWindows[0].resize(0, 0, this.width, 0);
+      openWindows.get(this.id).resize(0, 0, this.width, 0);
     }
 
     this.clickedItemCoords = [];
@@ -1107,8 +1121,9 @@ class InventoryScreen extends GameObject {
       }
 
       else if(this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && !openWindows[1]) {
-        openWindows.push(new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, [63, 102, 141, 250], this.priority + 1, "hover", this));
-        spawners.inventoryContextMenu.call(openWindows[1]);
+        let tempId = openWindowIdCounter.val;
+        openWindows.set(tempId, new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, tempId, [63, 102, 141, 250], this.priority + 1, "hover", this));
+        spawners.inventoryContextMenu.call(openWindows.get(tempId));
         this.toggleOptionsBox = 1;
         // So that the item that was clicked is still known, mouse may move off of it
         this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
@@ -1116,7 +1131,7 @@ class InventoryScreen extends GameObject {
       }
 
       else {
-        checkContextMenu();
+        this.checkContextMenu();
       }
     }
   }
