@@ -1053,10 +1053,15 @@ class InventoryScreen extends GameObject {
   constructor(x, y, width, height, boxId, priority, theInventory) {
     // Vars
     super(x, y, width, height);
+
+    // Window ids for various features that can be accessed using inventory menu
     this.id = boxId;
+    this.contextId = null;
+    this.upgradeId = null;
 
     // When constructed, give it a global inventory to work with
     this.itemArr = theInventory;
+
     // Get inventory size from inventory. Assumes each row is same size (it should be)
     this.rows = this.itemArr.length;
     this.cols = this.itemArr[0].length;
@@ -1065,6 +1070,7 @@ class InventoryScreen extends GameObject {
     this.mouseHeldItem = null;
     
     // Resize self to perfectly fit the inventory and stay within parent box
+    // The id passed on creation is used to force resize on parent window
     this.boxSize = this.height / this.rows;
     this.boxSizeOffset = this.boxSize / 2;
     if(this.boxSize * this.cols < this.width) {
@@ -1073,7 +1079,6 @@ class InventoryScreen extends GameObject {
     }
 
     this.clickedItemCoords = [];
-    this.toggleOptionsBox = false;
     this.priority = priority;
 
     // Corner data useful for the for loop drawing the 2d array and checking what box mouse is in
@@ -1120,28 +1125,58 @@ class InventoryScreen extends GameObject {
         }
       }
 
-      else if(this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && !openWindows[1]) {
-        let tempId = openWindowIdCounter.val;
-        openWindows.set(tempId, new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, tempId, [63, 102, 141, 250], this.priority + 1, "hover", this));
-        spawners.inventoryContextMenu.call(openWindows.get(tempId));
-        this.toggleOptionsBox = 1;
-        // So that the item that was clicked is still known, mouse may move off of it
-        this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
-        gMouseToggle.val = this.priority + 1;
+      else if(this.mouse && this.mouseHeldItem && mouseIsPressed) {
+        // I still draw the image so the image doesn't disappear for a frame when it is put somewhere
+        image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
+        this.mouseDropItem();
       }
 
-      else {
-        this.checkContextMenu();
+      else if(this.mouseHeldItem) {
+        // If an item is held, have it follow the mouse
+        image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
+      }
+
+      // If we click, and there is an item at that position, and a context menu is not open now...
+      else if(this.itemArr[this.mouseYPos][this.mouseXPos] && mouseIsPressed && !openWindows.has(this.contextId)) {
+        this.openContextMenu();
       }
     }
   }
 
-  mousePickUpItem() {
-    console.log(this.clickedItemCoords);
+  openContextMenu() {
+    // Save item coords so that the item that was clicked is still known, because mouse may move off of it
+    this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
+
+    // Get an id for the new window, then that window can be accessed 
+    this.contextId = openWindowIdCounter.val;
+    openWindows.set(this.contextId, new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, this.contextId, [63, 102, 141, 250], this.priority + 1, "hover", this));
+    spawners.inventoryContextMenu.call(openWindows.get(this.contextId));
+
+    gMouseToggle.val = this.priority + 1;
   }
 
-  checkContextMenu() {
-    void 0;
+  openUpgradeMenu() {
+    this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
+
+    this.upgradeId = openWindowIdCounter.val;
+    openWindows.set(this.upgradeId, new BackgroundBox(this.x, this.y, this.width * 0.8, this.height * 0.8, this.upgradeId, [63, 102, 141, 250], this.priority + 1, "click", this));
+    spawners.inventoryUpgradeMenu.call(openWindows.get(this.upgradeId));
+
+    gMouseToggle.val = this.priority + 1;
+  }
+
+  mousePickUpItem() {
+    this.mouseHeldItem = this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]];
+    this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]] = 0;
+    console.log(this.mouseHeldItem);
+  }
+
+  mouseDropItem() {
+    // Put item into hovered box, clear related variables
+    this.itemArr[this.mouseYPos][this.mouseXPos] = this.mouseHeldItem;
+    this.mouseHeldItem = null;
+    this.clickedItemCoords = [];
+    gMouseToggle.val = this.priority + 1;
   }
 
   resize(x, y, width) {
@@ -1262,7 +1297,6 @@ class UpgradeMenu extends GameObject {
     this.imageSize = this.width / 4;
     
     // Generating all the stuff needed to run in menu
-    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
     this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
     this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
     this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
@@ -1271,18 +1305,13 @@ class UpgradeMenu extends GameObject {
   }
 
   run() {
+
     // Do upgrade if this.upgItem is valid, else set close to true
     if(this.upgItem) {
       // Run the background box and our "upgrade" button
-      this.box.run();
       this.upgradeButton.run();
       this.levelsToUpgradeCounter.run();
       this.displayPrice.run();
-
-      // In this case, if user clicks outside of box, set close to true
-      if(this.box.close) {
-        this.close = true;
-      }
 
       // Draw image of upgItem
       this.calcMouse();
@@ -1303,6 +1332,8 @@ class UpgradeMenu extends GameObject {
   doUpgradeAndClose() {
     this.close = true;
   }
+
+
 }
 
 class ItemInfoMenu extends GameObject {

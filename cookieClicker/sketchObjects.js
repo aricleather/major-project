@@ -163,10 +163,32 @@ function initObjects() {
       this.contentToRun.push(new RhythmGame(this.x, this.y, this.width, this.height, this.priority));
     },
     inventoryContextMenu: function() {
-      this.contentToRun.push(new Button(this.x, this.y - this.height * 2/6, this.width, this.height / 3, this.priority, "Info", this.parent.mousePickUpItem.bind(this.parent), 0));
-      this.contentToRun.push(new Button(this.x, this.y, this.width, this.height / 3, this.priority, "Move", 0, 0));
-      this.contentToRun.push(new Button(this.x, this.y + this.height * 2/6, this.width, this.height / 3, this.priority, "Upgrade", 0, 0));
-    }
+      // In order to pass more than one function into one of these buttons and still use bind to call
+      // a function of parent, they can be assigned temporary variables then placed inside an anon. function
+      let moveButtonFunction = this.parent.mousePickUpItem.bind(this.parent, 0);
+      let upgradeButtonFunction = this.parent.openUpgradeMenu.bind(this.parent, 0);
+
+      // This function accesses the id of the context menu stored inside of the inventory screen and causes it to close
+      let closeContextFunction = function() {
+        openWindows.get(this.contextId).close = true;
+      }.bind(this.parent, 0);
+
+      this.contentToRun.push(new Button(this.x, this.y - this.height * 2/6, this.width, this.height / 3, this.priority, "Info", function() {
+        closeContextFunction();
+      }));
+      this.contentToRun.push(new Button(this.x, this.y, this.width, this.height / 3, this.priority, "Move", function () {
+        moveButtonFunction();
+        closeContextFunction();
+      }, 0));
+      this.contentToRun.push(new Button(this.x, this.y + this.height * 2/6, this.width, this.height / 3, this.priority, "Upgrade", function() {
+        upgradeButtonFunction();
+        closeContextFunction();
+      }, 0));
+    },
+    inventoryUpgradeMenu: function() {
+      this.contentToRun.push(new UpgradeMenu(this.x, this.y, this.width, this.height, this.rgb, this.priority, 
+        this.parent.itemArr[this.parent.clickedItemCoords[0][this.parent.clickedItemCoords[1]]]));
+    },
   };
 
 }
