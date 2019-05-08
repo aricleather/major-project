@@ -420,7 +420,7 @@ class ShopWeaponObject extends GameObject {
       this.owned++;
       // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
-      inventoryPush(tempInventory, new GameWeapon(this.objImage, "physical", this.name, this.metaText));
+      inventoryPush(tempInventory, new GameWeapon(this.objImage, "physical", this.name, this.metaText, 1));
     }
     else {
       errorSound.play();
@@ -686,8 +686,9 @@ class GlobalMessage extends GameObject {
 }
 
 class TextInput extends GameObject {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, id) {
     super(x, y, width, height);
+    this.id = id;
     this.currentText = "";
     this.tSize = 50;
     this.blinkToggle = true;
@@ -708,7 +709,7 @@ class TextInput extends GameObject {
   }
 
   getInput(key) {
-    if(key.length === 1 && key.toUpperCase() !== key.toLowerCase()) {
+    if(key.length === 1 && key.toUpperCase() !== key.toLowerCase() && !this.endInput) {
       this.currentText += key;
       this.reToggleBlink = millis() + 500;
       this.blinkToggle = false;
@@ -993,7 +994,6 @@ class BackgroundBox extends GameObject {
       // is rather painful to me. Maybe the classes utilizing the box should manage it themselves
       if(this.mode === "click" && !this.mouse && gMouse <= this.priority) {
         if(mouseIsPressed) {
-          console.log("box log: gMouse is: " + str(gMouse) + " my priority is: " + str(this.priority));
           this.close = true;
         }
         else {
@@ -1204,7 +1204,7 @@ class GameWeapon {
     this.weaponType = weaponType;
     this.name = name;
     this.metaText = metaText;
-    this.weaponlevel = weaponLevel;
+    this.weaponLevel = weaponLevel;
 
     this.type = "weapon";
   }
@@ -1349,20 +1349,41 @@ class ItemInfoMenu extends GameObject {
     this.counterWidth = this.width * 0.4;
     this.counterHeight = this.height / 6;
 
-    this.levelDisplayY = this.y - this.height * 0.35;
-    this.damageDisplayY = this.y;
+    this.counterX = this.x + this.width / 5;
+    this.damageDisplayY = this.y - this.height * 0.35;
+    this.typeDisplayY = this.y - this.height * 0.05;
+    this.durabilityDisplayY = this.y + this.height * 0.25;
     this.somethingDisplayY = this.y + this.height * 0.35;
     this.imageX = this.x - this.width / 4;
     this.imageSize = this.width / 4;
+    this.tSize = this.imageSize / 7;
+    this.textY = this.y + this.imageSize / 2 + this.tSize;
     
     // Generating all the stuff needed to run in menu
-    this.levelDisplay = new NumberCounter(this.x, this.levelDisplayY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], false, this.priority);
-
+    this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", 0, [79, 128, 176], false, this.priority);
+    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", "Type", [79, 128, 176], false, this.priority);
+    this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", 0, [79, 128, 176], false, this.priority);
     this.close = false;
   }
 
   run() {
-    this.levelDisplay.run();
+    if(this.item) {
+      this.damageDisplay.run();
+      this.typeDisplay.run();
+      this.durabilityDisplay.run();
+      
+      this.calcMouse();
+      tint(255, 255);
+      image(this.item.img, this.imageX, this.y, this.imageSize, this.imageSize);
+
+      textSize(this.tSize);
+      textAlign(CENTER, TOP);
+      text(this.item.name + "\nLevel: " + str(this.item.weaponLevel), this.imageX, this.textY);
+    }
+
+    else {
+      this.close = true;
+    }
   }
 }
 
@@ -1377,9 +1398,9 @@ class NumberCounter extends GameObject {
     this.counterText = counterText || null;
 
     // Formatting, positioning, scaling
-    this.tSize = this.width / 10;
+    this.numberTSize = this.width / 10;
     this.counterTSize = this.height / 2;
-    this.textY = this.y + this.height * 0.5 + this.tSize;
+    this.textY = this.y + this.height * 0.5 + this.numberTSize;
     this.leftX = this.x - this.width / 4;
     this.rightX = this.x + this.width / 4;
   }
@@ -1396,6 +1417,7 @@ class NumberCounter extends GameObject {
     // Show the current value
     noStroke();
     fill(0);
+    textAlign(CENTER, CENTER);
     textSize(this.counterTSize);
     text(str(this.val), this.x, this.y);
 
@@ -1407,8 +1429,7 @@ class NumberCounter extends GameObject {
     }
 
     if(this.counterText) {
-      textSize(this.tSize);
-      textAlign(CENTER, CENTER);
+      textSize(this.numberTSize);
       text(this.counterText, this.x, this.textY);
     }
 
@@ -2012,7 +2033,7 @@ let songs = {
 };
 
 class Message {
-  constructor(message, preFunc = 0, postFunc = 0) {
+  constructor(message, preFunc = 0, whileFunc = 0, postFunc = 0) {
     this.message = message;
     this.preFunc = preFunc;
     this.postFunc = postFunc;
@@ -2028,11 +2049,18 @@ class TextBox extends GameObject {
     this.tSize = tSize;
     this.id = id;
     this.whileFunc = whileFunc;
+    this.nextBlock = false;
+
+    // Keep track of message functions, if they were done yet
+    this.preFuncRan = false;
+
     // Allows the writing of string to screen letter by letter
     this.messageBeingWritten = "";
+
     // Formatting stuff
     this.leftX = this.x - this.width / 2;
     this.topY = this.y - this.height / 2;
+
     // For when all the text is exhausted
     this.close = false;
   }
@@ -2042,6 +2070,22 @@ class TextBox extends GameObject {
     if(this.whileFunc) {
       this.whileFunc();
     }
+
+    if(this.messageArr[0].preFunc && !this.preFuncRan) {
+      this.messageArr[0].preFunc();
+      this.preFuncRan = true;
+    }
+    else if(this.messageArr[0].whileFunc) {
+      let whileFuncCheck = this.mesageArr[0].whileFunc();
+      if(!(whileFuncCheck === undefined || whileFuncCheck === true)) {
+        this.nextBlock = true;
+      }
+      else {
+        this.nextBlock = false;
+      }
+    }
+
+
     // Formatting
     rectMode(CENTER);
     stroke(255);
@@ -2062,7 +2106,7 @@ class TextBox extends GameObject {
     noStroke();
     fill(255);
     text(this.messageBeingWritten, this.leftX + 5, this.topY + this.tSize / 2 + 5);
-    if(mouseIsPressed && this.mouse && gMouse <= this.priority) {
+    if(!this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
       this.messageBeingWritten = "";
       gMouseToggle.val = this.priority + 1;
       if(this.messageArr[1]) {

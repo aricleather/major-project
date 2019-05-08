@@ -1,31 +1,6 @@
 // Classes that when run play animations, which may be interactive (ex. intro animation, prompting for player name)
 
-let animationState = false;
-let animation;
 
-function startAnimation(whichAnimation) {
-  // When called, generate the correct animation object and set it to animation,
-  // then set animationState to true so that the animation will be run by displayAnimation in draw loop
-
-  if(whichAnimation === "newGameAnimation") {
-    animation = new NewGameAnimation;
-    animationState = true;
-  }
-  else if(whichAnimation === "titleScreenAnimation1") {
-    animation = new TitleScreenAnimation1;
-    animationState = true;
-  }
-}
-
-function displayAnimation() {
-  // If an animation was called, run it while animationState is true
-  if(animationState) {
-    animation.run();
-  }
-  else {
-    animation = null;
-  }
-}
 
 class NewGameAnimation {
   // Run automatically when new player detected. Introduces player, asks them their name
@@ -289,4 +264,28 @@ animFunctions = {
     }
     return this.textAlpha <= 0;
   },
+};
+
+let gameMessages = {
+  intro: [new Message("Hello"), 
+    new Message("Intro time", function() {
+      this.tempId = inputFieldIdCounter.val;
+      openInputFields.set(this.tempId, new TextInput(width / 2, height / 2, width / 3, height * 0.15, this.tempId));
+    }, function() {
+      if(!openInputFields.get(this.tempId).endInput) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    }), new Message("goodbye")],
+};
+
+let textBoxSpawners = {
+  intro: function() {
+    let tempId = textBoxIdCounter.val;
+    openTextBoxes.set(tempId, new TextBox(width / 2, height * 0.8, width / 3, height * 0.15, 1, gameMessages.intro, width / 50, tempId, function() {
+      background(0);
+    }));
+  }
 };

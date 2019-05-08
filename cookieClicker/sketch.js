@@ -50,7 +50,25 @@ let gMouseToggle = {
   },
 };
 
+// These counters always create new IDs for keys of objects in maps
+// by adding 1 to themselves, allowing for these objects to be independent
 let openWindowIdCounter = {
+  _val: 0,
+  get val() {
+    this._val++;
+    return this._val;
+  }
+};
+
+let textBoxIdCounter = {
+  _val: 0,
+  get val() {
+    this._val++;
+    return this._val;
+  }
+};
+
+let inputFieldIdCounter = {
   _val: 0,
   get val() {
     this._val++;
@@ -60,6 +78,7 @@ let openWindowIdCounter = {
 
 let gMouse = 0;
 this.openTextBoxes = new Map();
+this.openInputFields = new Map();
 let currentDialog = [];
 let input = null;
 
@@ -155,7 +174,7 @@ function setup() {
   angleMode(DEGREES);
   loadSaveFile();
   if(window.localStorage.length === 0) {
-    startAnimation("titleScreenAnimation1");
+    console.log("do intro");
   }
   initAchievements();
 
@@ -270,7 +289,6 @@ function draw() {
   }
 
   globalMessage.run();
-  displayAnimation();
   gMouseToggle.end();
 }
 
