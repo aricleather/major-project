@@ -542,6 +542,17 @@ function closeDialog() {
   currentDialog.shift();
 }
 
+function inventoryPush(theInventory, theItem) {
+  for(let i = 0; i < theInventory.length; i++) {
+    for(let j = 0; j < theInventory[0].length; j++) {
+      if(theInventory[i][j] === 0) {
+        theInventory[i][j] = theItem;
+        return;
+      }
+    }
+  }
+}
+
 function calculateTextSize(theString, theWidth, theHeight = 0) {
   theString = theString.split(" ");
   let longestWord = "";

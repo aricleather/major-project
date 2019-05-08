@@ -167,6 +167,7 @@ function initObjects() {
       // a function of parent, they can be assigned temporary variables then placed inside an anon. function
       let moveButtonFunction = this.parent.mousePickUpItem.bind(this.parent, 0);
       let upgradeButtonFunction = this.parent.openUpgradeMenu.bind(this.parent, 0);
+      let infoButtonFunction = this.parent.openInfoMenu.bind(this.parent, 0);
 
       // This function accesses the id of the context menu stored inside of the inventory screen and causes it to close
       let closeContextFunction = function() {
@@ -174,6 +175,7 @@ function initObjects() {
       }.bind(this.parent, 0);
 
       this.contentToRun.push(new Button(this.x, this.y - this.height * 2/6, this.width, this.height / 3, this.priority, "Info", function() {
+        infoButtonFunction();
         closeContextFunction();
       }));
       this.contentToRun.push(new Button(this.x, this.y, this.width, this.height / 3, this.priority, "Move", function () {
@@ -186,8 +188,12 @@ function initObjects() {
       }, 0));
     },
     inventoryUpgradeMenu: function() {
-      this.contentToRun.push(new UpgradeMenu(this.x, this.y, this.width, this.height, this.rgb, this.priority, 
-        this.parent.itemArr[this.parent.clickedItemCoords[0][this.parent.clickedItemCoords[1]]]));
+      this.contentToRun.push(new UpgradeMenu(this.x, this.y, this.width, this.height, this.priority, 
+        this.parent.itemArr[this.parent.clickedItemCoords[0]][this.parent.clickedItemCoords[1]]));
+    },
+    inventoryInfoMenu: function() {
+      this.contentToRun.push(new ItemInfoMenu(this.x, this.y, this.width, this.height, this.priority, 
+        this.parent.itemArr[this.parent.clickedItemCoords[0]][this.parent.clickedItemCoords[1]]));
     },
   };
 

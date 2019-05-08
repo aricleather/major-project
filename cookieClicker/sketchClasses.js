@@ -420,7 +420,7 @@ class ShopWeaponObject extends GameObject {
       this.owned++;
       // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
-      playerInventory.addItem(new GameWeapon(this.objImage, "physical", this.name, this.metaText));
+      inventoryPush(tempInventory, new GameWeapon(this.objImage, "physical", this.name, this.metaText));
     }
     else {
       errorSound.play();
@@ -1056,6 +1056,7 @@ class InventoryScreen extends GameObject {
 
     // Window ids for various features that can be accessed using inventory menu
     this.id = boxId;
+    this.infoId = null;
     this.contextId = null;
     this.upgradeId = null;
 
@@ -1113,6 +1114,12 @@ class InventoryScreen extends GameObject {
       }
     }
 
+    // If an item is held, have it follow the mouse
+    if(this.mouseHeldItem) {
+      image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
+      openWindows.get(this.id).close = false;
+    }
+
     // Display meta text in a text box if an item is in a slot
     if(this.mouse && gMouse <= this.priority) {
       // Calculate what box is the mouse inside
@@ -1126,14 +1133,7 @@ class InventoryScreen extends GameObject {
       }
 
       else if(this.mouse && this.mouseHeldItem && mouseIsPressed) {
-        // I still draw the image so the image doesn't disappear for a frame when it is put somewhere
-        image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
         this.mouseDropItem();
-      }
-
-      else if(this.mouseHeldItem) {
-        // If an item is held, have it follow the mouse
-        image(this.mouseHeldItem.img, mouseX, mouseY, this.boxSize * 0.8, this.boxSize * 0.8);
       }
 
       // If we click, and there is an item at that position, and a context menu is not open now...
@@ -1143,16 +1143,22 @@ class InventoryScreen extends GameObject {
     }
   }
 
-  openContextMenu() {
+  openInfoMenu() {
     // Save item coords so that the item that was clicked is still known, because mouse may move off of it
     this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
 
     // Get an id for the new window, then that window can be accessed 
+    this.infoId = openWindowIdCounter.val;
+    openWindows.set(this.infoId, new BackgroundBox(this.x, this.y, this.width * 0.8, this.height * 0.8, this.infoId, [63, 102, 141, 250], this.priority + 1, "click", this));
+    spawners.inventoryInfoMenu.call(openWindows.get(this.infoId));
+  }
+
+  openContextMenu() {
+    this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
+
     this.contextId = openWindowIdCounter.val;
     openWindows.set(this.contextId, new BackgroundBox(this.leftX + this.boxSize * (this.mouseXPos + 1) + 50, this.topY + this.boxSize * this.mouseYPos, 100, 200, this.contextId, [63, 102, 141, 250], this.priority + 1, "hover", this));
     spawners.inventoryContextMenu.call(openWindows.get(this.contextId));
-
-    gMouseToggle.val = this.priority + 1;
   }
 
   openUpgradeMenu() {
@@ -1161,14 +1167,11 @@ class InventoryScreen extends GameObject {
     this.upgradeId = openWindowIdCounter.val;
     openWindows.set(this.upgradeId, new BackgroundBox(this.x, this.y, this.width * 0.8, this.height * 0.8, this.upgradeId, [63, 102, 141, 250], this.priority + 1, "click", this));
     spawners.inventoryUpgradeMenu.call(openWindows.get(this.upgradeId));
-
-    gMouseToggle.val = this.priority + 1;
   }
 
   mousePickUpItem() {
     this.mouseHeldItem = this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]];
     this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]] = 0;
-    console.log(this.mouseHeldItem);
   }
 
   mouseDropItem() {
@@ -1281,7 +1284,7 @@ class OptionsBox extends GameObject {
 }
 
 class UpgradeMenu extends GameObject {
-  constructor(x, y, width, height, backgroundRgb, priority, upgItem) {
+  constructor(x, y, width, height, priority, upgItem) {
     super(x, y, width, height);
     // Vars from input
     this.upgItem = upgItem;
@@ -1305,7 +1308,6 @@ class UpgradeMenu extends GameObject {
   }
 
   run() {
-
     // Do upgrade if this.upgItem is valid, else set close to true
     if(this.upgItem) {
       // Run the background box and our "upgrade" button
@@ -1337,10 +1339,11 @@ class UpgradeMenu extends GameObject {
 }
 
 class ItemInfoMenu extends GameObject {
-  constructor(x, y, width, height, backgroundRgb, priority, theItem) {
+  constructor(x, y, width, height, priority, theItem) {
     super(x, y, width, height);
     // Vars from input
-    this.theItem = theItem;
+    this.item = theItem;
+    this.priority = priority;
   
     // Positioning and scaling of elements in upgrade menu
     this.counterWidth = this.width * 0.4;
@@ -1353,12 +1356,13 @@ class ItemInfoMenu extends GameObject {
     this.imageSize = this.width / 4;
     
     // Generating all the stuff needed to run in menu
-    this.box = new BackgroundBox(x, y, width, height, backgroundRgb, priority, "click");
-    this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
-    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
-    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, "Upgrade!", 0, [76, 187, 23]);
+    this.levelDisplay = new NumberCounter(this.x, this.levelDisplayY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], false, this.priority);
 
     this.close = false;
+  }
+
+  run() {
+    this.levelDisplay.run();
   }
 }
 
