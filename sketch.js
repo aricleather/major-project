@@ -731,6 +731,6 @@ function closeInventory() {
 
 function spawnItem(itemToSpawn, levelOfItem = 2) {
   if(itemToSpawn === "Wooden Sword") {
-    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "Breaks easily, but leaves splinters.", levelOfItem);
+    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "woodenSword", "Breaks easily, but leaves splinters.", levelOfItem);
   }
 }

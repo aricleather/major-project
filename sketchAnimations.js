@@ -272,11 +272,12 @@ let gameMessages = {
       this.tempId = inputFieldIdCounter.val;
       openInputFields.set(this.tempId, new TextInput(width / 2, height / 2, width / 3, height * 0.15, this.tempId));
     }, function() {
+      openInputFields.get(this.tempId).run();
       if(!openInputFields.get(this.tempId).endInput) {
         return false;
       }
       else {
-        return true;
+        return "skip";
       }
     }), new Message("goodbye")],
 };

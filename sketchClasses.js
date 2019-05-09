@@ -420,7 +420,7 @@ class ShopWeaponObject extends GameObject {
       this.owned++;
       // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
-      inventoryPush(tempInventory, new GameWeapon(this.objImage, "physical", this.name, this.metaText, 1));
+      inventoryPush(playerInventory, new GameWeapon(this.objImage, "physical", this.name, "woodenSword", this.metaText, 1));
     }
     else {
       errorSound.play();
@@ -1199,10 +1199,11 @@ class InventoryScreen extends GameObject {
 }
 
 class GameWeapon {
-  constructor(weaponImage, weaponType, name, metaText, weaponLevel) {
+  constructor(weaponImage, weaponType, name, id, metaText, weaponLevel) {
     this.img = weaponImage;
     this.weaponType = weaponType;
     this.name = name;
+    this.id = id;
     this.metaText = metaText;
     this.weaponLevel = weaponLevel;
 
@@ -1301,7 +1302,7 @@ class UpgradeMenu extends GameObject {
     
     // Generating all the stuff needed to run in menu
     this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
-    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 1000, [79, 128, 176], false);
+    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 0, [79, 128, 176], false);
     this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
@@ -1315,23 +1316,40 @@ class UpgradeMenu extends GameObject {
       this.levelsToUpgradeCounter.run();
       this.displayPrice.run();
 
+      // See how many levels the player wants to upgrade, fetch price accordingly, then update price display
+      let upgradeCost = 0;
+      let levelsToUpgrade = this.levelsToUpgradeCounter.val;
+      for(let i = this.upgItem.weaponLevel; i < levelsToUpgrade + this.upgItem.weaponLevel; i++) {
+        upgradeCost += weaponUpgradeData[this.upgItem.id].price[str(i)];
+      }
+      this.displayPrice.val = upgradeCost;
+
       // Draw image of upgItem
       this.calcMouse();
       tint(255, 255);
       image(this.upgItem.img, this.imageX, this.y, this.imageSize, this.imageSize);
 
-      // If upgradeButton clicked, run doUpgradeAndClose
+      // If upgradeButton clicked, check if enough cookies, if so do the upgrade then close window
       if(this.upgradeButton.alreadyClicked) {
-        this.doUpgradeAndClose();
+        if(cookies < upgradeCost) {
+          this.upgradeButton.alreadyClicked = false;
+          // errorSound.play();
+        }
+        else {
+          this.doUpgradeAndClose(upgradeCost, levelsToUpgrade);
+        }
       }
     }
 
+    // In case an invalid item loads or an item did not load, will just close menu
     else {
       this.close = true;
     }
   }
 
-  doUpgradeAndClose() {
+  doUpgradeAndClose(cost, levelsToUpgrade) {
+    cookies -= cost;
+    this.upgItem.weaponLevel += levelsToUpgrade;
     this.close = true;
   }
 
@@ -1361,7 +1379,7 @@ class ItemInfoMenu extends GameObject {
     
     // Generating all the stuff needed to run in menu
     this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", 0, [79, 128, 176], false, this.priority);
-    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", "Type", [79, 128, 176], false, this.priority);
+    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", this.item.weaponType, [79, 128, 176], false, this.priority);
     this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", 0, [79, 128, 176], false, this.priority);
     this.close = false;
   }
@@ -2036,6 +2054,7 @@ class Message {
   constructor(message, preFunc = 0, whileFunc = 0, postFunc = 0) {
     this.message = message;
     this.preFunc = preFunc;
+    this.whileFunc = whileFunc;
     this.postFunc = postFunc;
   }
 }
@@ -2048,6 +2067,7 @@ class TextBox extends GameObject {
     this.messageArr = messageArr;
     this.tSize = tSize;
     this.id = id;
+    this.skip = false;
     this.whileFunc = whileFunc;
     this.nextBlock = false;
 
@@ -2076,8 +2096,11 @@ class TextBox extends GameObject {
       this.preFuncRan = true;
     }
     else if(this.messageArr[0].whileFunc) {
-      let whileFuncCheck = this.mesageArr[0].whileFunc();
-      if(!(whileFuncCheck === undefined || whileFuncCheck === true)) {
+      let whileFuncCheck = this.messageArr[0].whileFunc();
+      if(whileFuncCheck === "skip") {
+        this.skip = true;
+      }
+      else if(!(whileFuncCheck === undefined || whileFuncCheck === true)) {
         this.nextBlock = true;
       }
       else {
@@ -2106,8 +2129,10 @@ class TextBox extends GameObject {
     noStroke();
     fill(255);
     text(this.messageBeingWritten, this.leftX + 5, this.topY + this.tSize / 2 + 5);
-    if(!this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
+    if(this.skip || !this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
       this.messageBeingWritten = "";
+      this.skip = false;
+      this.nextBlock = false;
       gMouseToggle.val = this.priority + 1;
       if(this.messageArr[1]) {
         this.messageArr = this.messageArr.slice(1);

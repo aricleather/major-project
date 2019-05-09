@@ -25,7 +25,7 @@ let achievementNumber = 0;
 
 let spawners;
 
-let tempInventory = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]];
+let playerInventory = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]];
 
 // Generate all game objects
 function initObjects() {
@@ -138,7 +138,7 @@ function initObjects() {
 
   spawners = {
     playerInventory: function() {
-      this.contentToRun.push(new InventoryScreen(width / 2, height * 0.22, 400, 200, this.id, 1, tempInventory));
+      this.contentToRun.push(new InventoryScreen(width / 2, height * 0.22, 400, 200, this.id, 1, playerInventory));
     },
     minigames: function() {
       this.contentToRun.push(new ImageButton(this.x - this.width / 4, this.y - this.height / 4, this.width / 8, this.width / 8, this.priority, minigameIcon, function() {
