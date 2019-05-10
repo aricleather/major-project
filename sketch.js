@@ -77,8 +77,9 @@ let inputFieldIdCounter = {
 };
 
 let gMouse = 0;
-this.openTextBoxes = new Map();
-this.openInputFields = new Map();
+let openTextBoxes = new Map();
+let openInputFields = new Map();
+let openGlobalMessages = [];
 let currentDialog = [];
 let input = null;
 
@@ -288,7 +289,13 @@ function draw() {
     openTextBoxes.get(key).run();
   }
 
-  globalMessage.run();
+  for(let i = 0; i < openGlobalMessages.length; i++) {
+    openGlobalMessages[i].run();
+    if (openGlobalMessages[i].close === true) {
+      openGlobalMessages.splice(i, 1);
+    }
+  }
+
   gMouseToggle.end();
 }
 
@@ -732,5 +739,8 @@ function closeInventory() {
 function spawnItem(itemToSpawn, levelOfItem = 2) {
   if(itemToSpawn === "Wooden Sword") {
     return new GameWeapon(woodenSword, "physical", "Wooden Sword", "woodenSword", "Breaks easily, but leaves splinters.", levelOfItem);
+  }
+  else if(itemToSpawn === "Stone Axe") {
+    return new GameWeapon(stoneAxe, "physical", "Stone Axe", "stoneAxe", "Packs a heavy punch while remaining durable.", levelOfItem);
   }
 }

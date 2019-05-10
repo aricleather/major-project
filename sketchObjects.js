@@ -129,7 +129,6 @@ function initObjects() {
   });
 
   // Global messages
-  globalMessage = new GlobalMessage();
 
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
@@ -240,8 +239,6 @@ function resizeObjects() {
   returnToMenuDialog.resize();
   deleteDataDialog.resize();
 
-  // Global message object
-  globalMessage.resize(width / 2, height / 5, width * 0.6, height * 0.2);
 
   // Exp bars
   playerExpBar.resize(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02);

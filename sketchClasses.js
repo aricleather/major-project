@@ -420,7 +420,7 @@ class ShopWeaponObject extends GameObject {
       this.owned++;
       // this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
       this.updateText();
-      inventoryPush(playerInventory, new GameWeapon(this.objImage, "physical", this.name, "woodenSword", this.metaText, 1));
+      inventoryPush(playerInventory, spawnItem(this.name, 1));
     }
     else {
       errorSound.play();
@@ -638,49 +638,39 @@ class DialogBox extends GameObject {
 }
 
 class GlobalMessage extends GameObject {
-  constructor() {
-    super(width / 2, height / 5, width * 0.6, height * 0.2);
+  constructor(x, y, width, text, duration) {
+    super(x, y, width, 1);
     // Vars
-    this.textAlpha = 0;
-    this.tSize = this.width / 20;
-    this.toggled = false;
-    this.objText = "";
+    this.textAlpha = 255;
+    this.tSize = this.width / 15;
+    this.objText = text;
+    this.fadeTime = millis() + duration;
+    this.close = false;
   }
 
   // If toggled, display the text
   run() {
-    if(this.toggled) {
-      fill(0, this.textAlpha);
-      noStroke();
-      textSize(this.tSize);
-      textAlign(CENTER, CENTER);
-      text(this.objText, this.x, this.y);
+    fill(0, this.textAlpha);
+    noStroke();
+    textSize(this.tSize);
+    textAlign(CENTER, CENTER);
+    text(this.objText, this.x, this.y);
 
-      // If fadeTime surpassed, start fading then untoggle
-      if(this.fadeTime < millis()) {
-        this.textAlpha -= 8.5;
-        if(this.textAlpha <= 0) {
-          this.toggled = false;
-        }
+    // If fadeTime surpassed, start fading then untoggle
+    if(this.fadeTime < millis()) {
+      this.textAlpha -= 8.5;
+      if(this.textAlpha <= 0) {
+        this.close = true;
       }
     }
   }
-    
-  // Call toggle on a GlobalMessage with a duration to have one display for that duration
-  toggle(objText, duration) {
-    this.objText = formatText(objText, this.width, this.tSize);
-    this.textAlpha = 255;
-    this.toggled = true;
-    // Will start fading when duration has passed, fadeTime = current time + duration
-    this.fadeTime = millis() + duration;
-  }
 
-  resize() {
-    this.x = width / 2;
-    this.y = height / 5;
-    this.width = width * 0.6;
-    this.height = height * 0.2;
-    this.tSize = this.width / 20;
+  resize(x, y, width) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = 1;
+    this.tSize = this.width / 15;
     this.objText = formatText(this.objText, this.width, this.tSize);
   }
 }
@@ -1165,7 +1155,7 @@ class InventoryScreen extends GameObject {
     this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
 
     this.upgradeId = openWindowIdCounter.val;
-    openWindows.set(this.upgradeId, new BackgroundBox(this.x, this.y, this.width * 0.8, this.height * 0.8, this.upgradeId, [63, 102, 141, 250], this.priority + 1, "click", this));
+    openWindows.set(this.upgradeId, new BackgroundBox(this.x, this.y, this.width * 1.2, this.height * 0.8, this.upgradeId, [63, 102, 141, 250], this.priority + 1, "click", this));
     spawners.inventoryUpgradeMenu.call(openWindows.get(this.upgradeId));
   }
 
@@ -1291,18 +1281,22 @@ class UpgradeMenu extends GameObject {
     this.upgItem = upgItem;
   
     // Positioning and scaling of elements in upgrade menu
-    this.buttonX = this.x + this.width / 5;
+    this.counterXLeft = this.x;
+    this.counterXRight = this.x + this.width / 3;
+    this.buttonX = this.x + this.width / 6;
     this.buttonY = this.y + this.height * 0.35;
-    this.counterWidth = this.width * 0.4;
+    this.counterWidth = this.width * 0.26;
     this.counterHeight = this.height / 6;
     this.levelsToUpgradeCounterY = this.y - this.height * 0.35;
     this.displayPriceY = this.y;
-    this.imageX = this.x - this.width / 4;
-    this.imageSize = this.width / 4;
+    this.imageX = this.x - this.width / 3;
+    this.imageSize = this.width / 6;
     
     // Generating all the stuff needed to run in menu
-    this.levelsToUpgradeCounter = new NumberCounter(this.buttonX, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, "Level", 0, [79, 128, 176], true, priority, 0);
-    this.displayPrice = new NumberCounter(this.buttonX, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 0, [79, 128, 176], false);
+    this.levelsToUpgradeCounter = new NumberCounter(this.counterXLeft, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight,
+      "Level", this.upgItem.weaponLevel, this.upgItem.weaponLevel, weaponUpgradeData[this.upgItem.id].maxLevel, [79, 128, 176], true, priority, 0);
+    this.displayPrice = new NumberCounter(this.counterXLeft, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 
+      0, 0, 0, [79, 128, 176], false);
     this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
@@ -1318,9 +1312,10 @@ class UpgradeMenu extends GameObject {
 
       // See how many levels the player wants to upgrade, fetch price accordingly, then update price display
       let upgradeCost = 0;
-      let levelsToUpgrade = this.levelsToUpgradeCounter.val;
+      let levelsToUpgrade = this.levelsToUpgradeCounter.val - this.upgItem.weaponLevel;
       for(let i = this.upgItem.weaponLevel; i < levelsToUpgrade + this.upgItem.weaponLevel; i++) {
         upgradeCost += weaponUpgradeData[this.upgItem.id].price[str(i)];
+        console.log(i);
       }
       this.displayPrice.val = upgradeCost;
 
@@ -1348,8 +1343,10 @@ class UpgradeMenu extends GameObject {
   }
 
   doUpgradeAndClose(cost, levelsToUpgrade) {
+    buttonSelect1.play();
     cookies -= cost;
     this.upgItem.weaponLevel += levelsToUpgrade;
+    openGlobalMessages.push(new GlobalMessage(this.x, this.y + this.height / 2 + this.width / 15, this.width, "Upraded to: " + str(this.upgItem.weaponLevel), 2000));
     this.close = true;
   }
 
@@ -1378,9 +1375,9 @@ class ItemInfoMenu extends GameObject {
     this.textY = this.y + this.imageSize / 2 + this.tSize;
     
     // Generating all the stuff needed to run in menu
-    this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", 0, [79, 128, 176], false, this.priority);
-    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", this.item.weaponType, [79, 128, 176], false, this.priority);
-    this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", 0, [79, 128, 176], false, this.priority);
+    this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", 0, 0, 0, [79, 128, 176], false, this.priority);
+    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", this.item.weaponType, 0, 0, [79, 128, 176], false, this.priority);
+    this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", 0, 0, 0, [79, 128, 176], false, this.priority);
     this.close = false;
   }
 
@@ -1406,11 +1403,13 @@ class ItemInfoMenu extends GameObject {
 }
 
 class NumberCounter extends GameObject {
-  constructor(x, y, width, height, counterText = 0, startingVal = 0, rgb = 0, enabled, priority = 0) {
+  constructor(x, y, width, height, counterText = 0, startingVal = 0, min = 0, max = 0, rgb = 0, enabled, priority = 0) {
     super(x, y, width, height);
     // Vals from input
     this.enabled = enabled;
     this.val = startingVal || 0;
+    this.min = min;
+    this.max = max;
     this.priority = priority;
     this.rgb = rgb || [40, 40, 40];
     this.counterText = counterText || null;
@@ -1478,7 +1477,14 @@ class NumberCounter extends GameObject {
   }
 
   clicked(inc) {
-    this.val += inc;
+    let newVal = this.val + inc;
+    if(newVal > this.max || newVal < this.min) {
+      void 0;
+      // errorSound.play();
+    }
+    else {
+      this.val += inc;
+    }
   }
 }
 
