@@ -144,7 +144,6 @@ class SpinImage extends GameObject {
   // Translate to the x and y of the object, rotate, draw image, rotate back, translate back
   run() {
     this.rotateAmount = 360 * (this.spinCount % this.speed / this.speed);
-    console.log(this.rotateAmount);
     translate(this.x, this.y);
     rotate(this.rotateAmount);
     imageMode(CENTER);
@@ -1297,6 +1296,10 @@ class UpgradeMenu extends GameObject {
       "Level", this.upgItem.weaponLevel, this.upgItem.weaponLevel, weaponUpgradeData[this.upgItem.id].maxLevel, [79, 128, 176], true, priority, 0);
     this.displayPrice = new NumberCounter(this.counterXLeft, this.displayPriceY, this.counterWidth, this.counterHeight, "Price", 
       0, 0, 0, [79, 128, 176], false);
+    this.displayDamage = new NumberCounter(this.counterXRight, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight, 
+      "New Damage", this.upgItem.stats.damage, 0, 0, [79, 128, 176], false);
+    this.displayDurability = new NumberCounter(this.counterXRight, this.displayPriceY, this.counterWidth, this.counterHeight, "Max Dura.",
+      weaponUpgradeData[this.upgItem.id].durability[str(this.upgItem.weaponLevel)], 0, 0, [79, 128, 176], false);
     this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
@@ -1309,15 +1312,18 @@ class UpgradeMenu extends GameObject {
       this.upgradeButton.run();
       this.levelsToUpgradeCounter.run();
       this.displayPrice.run();
+      this.displayDamage.run();
+      this.displayDurability.run();
 
       // See how many levels the player wants to upgrade, fetch price accordingly, then update price display
       let upgradeCost = 0;
       let levelsToUpgrade = this.levelsToUpgradeCounter.val - this.upgItem.weaponLevel;
       for(let i = this.upgItem.weaponLevel; i < levelsToUpgrade + this.upgItem.weaponLevel; i++) {
         upgradeCost += weaponUpgradeData[this.upgItem.id].price[str(i)];
-        console.log(i);
       }
       this.displayPrice.val = upgradeCost;
+      this.displayDamage.val = weaponUpgradeData[this.upgItem.id].damage[str(this.upgItem.weaponLevel + levelsToUpgrade)];
+      this.displayDurability.val = weaponUpgradeData[this.upgItem.id].durability[str(this.upgItem.weaponLevel + levelsToUpgrade)];
 
       // Draw image of upgItem
       this.calcMouse();
@@ -1346,6 +1352,8 @@ class UpgradeMenu extends GameObject {
     buttonSelect1.play();
     cookies -= cost;
     this.upgItem.weaponLevel += levelsToUpgrade;
+    this.upgItem.stats.damage = weaponUpgradeData[this.upgItem.id].damage[str(this.upgItem.weaponLevel)];
+    this.upgItem.stats.maxDurability = weaponUpgradeData[this.upgItem.id].durability[str(this.upgItem.weaponLevel)];
     openGlobalMessages.push(new GlobalMessage(this.x, this.y + this.height / 2 + this.width / 15, this.width, "Upraded to: " + str(this.upgItem.weaponLevel), 2000));
     this.close = true;
   }
@@ -1375,9 +1383,11 @@ class ItemInfoMenu extends GameObject {
     this.textY = this.y + this.imageSize / 2 + this.tSize;
     
     // Generating all the stuff needed to run in menu
-    this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", 0, 0, 0, [79, 128, 176], false, this.priority);
-    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", this.item.weaponType, 0, 0, [79, 128, 176], false, this.priority);
-    this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", 0, 0, 0, [79, 128, 176], false, this.priority);
+    this.typeText = this.item.weaponType.substr(0, 1).toUpperCase() + this.item.weaponType.substr(1);
+    this.durabilityText = str(this.item.stats.durability) + "/" + str(this.item.stats.maxDurability);
+    this.damageDisplay = new NumberCounter(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight, "Damage", this.item.stats.damage, 0, 0, [79, 128, 176], false, this.priority);
+    this.typeDisplay = new NumberCounter(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight, "Type", this.typeText, 0, 0, [79, 128, 176], false, this.priority);
+    this.durabilityDisplay = new NumberCounter(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight, "Durability", this.durabilityText, 0, 0, [79, 128, 176], false, this.priority);
     this.close = false;
   }
 
@@ -2012,7 +2022,6 @@ class RhythmGame extends GameObject {
         if(this.keyMap.has(str(note + 1))) {
           // See if it was hit soon enough
           let timeDifference = Math.abs(this.keyMap.get(str(note + 1)) - this.currentTickTime);
-          console.log(timeDifference);
           if(timeDifference < 75) {
             // Add some score if so
             scoreGainedThisTick += 50;

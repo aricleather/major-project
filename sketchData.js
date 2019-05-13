@@ -10,12 +10,21 @@ let weaponUpgradeData = {
       5: 1000,
     },
     damage: {
+      // 1 means damage at level 1 (same with durability)
       1: 1,
       2: 2,
       3: 3,
       4: 4,
       5: 5,
       6: 7,
+    },
+    durability: {
+      1: 10,
+      2: 10,
+      3: 10,
+      4: 10,
+      5: 15,
+      6: 15,
     }
   },
   stoneAxe: {
@@ -42,6 +51,18 @@ let weaponUpgradeData = {
       8: 23,
       9: 26,
       10: 40,
+    },
+    durability: {
+      1: 50,
+      2: 50,
+      3: 50,
+      4: 50,
+      5: 65,
+      6: 65,
+      7: 65,
+      8: 70,
+      9: 70,
+      10: 80,
     }
   },
 };

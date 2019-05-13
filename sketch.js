@@ -99,7 +99,7 @@ function cookieIncrement() {
 }
 
 // Load content used in game
-let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar; // Images
+let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon; // Images
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
@@ -150,6 +150,7 @@ function preload() {
   stoneAxe = loadImage("assets/stoneAxe.png");
   inventoryButton = loadImage("assets/invButton.png");
   minigameIcon = loadImage("assets/minigameIcon.png");
+  battleIcon = loadImage("assets/battleIcon.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -278,7 +279,10 @@ function draw() {
     displayOptions();
   }
   else if (gameState === 3) {
-    // Gamestate during some animations
+    displayBattleMap();
+  }
+  else if (gameState === 4) {
+    // For anything that needs nothing to happen
     void 0;
   }
   runDialogBoxes();
@@ -328,6 +332,7 @@ function mainGame() { // gameState 1
     openShopButton.run();
     inventoryOpenButton.run();
     miniGamesButton.run();
+    battleButton.run();
   }
   if(achievementState) {
     displayAchievementsMenu();
@@ -548,6 +553,10 @@ function cookieFall() {
   }
 }
 
+function displayBattleMap() {
+  text("Ya i'm not done this yet", width / 2, height / 2);
+}
+
 function newDialogBox(theDialog) {
   // If arg is a dialog box, push to currentDialog. Will be run in draw()
   if (theDialog.constructor.name === "DialogBox") {
@@ -713,7 +722,6 @@ function mouseWheel(event) {
   }
 
   if(achievementState && mouseX <= width * 0.3) {
-
     achievements.clicks.obj.mouseScroll(event.delta);
   }
 }
@@ -724,23 +732,23 @@ function windowResized() {
   resizeObjects();
 }
 
-function openInventory(theInventory) {
-  currentInv = theInventory === "player" ? playerInventory : null;
-}
-
-function closeInventory() {
-  // Going along with the comment in the BackgroundBox, this prevents boxes
-  // from being closed unless gMouse is currently their own priority, stopping
-  // unwanted, immediate closing when opening inventories with on-screen buttons
-  // currentInv = gMouse === currentInv.priority ? null : currentInv;
-  currentInv = null;
-}
-
 function spawnItem(itemToSpawn, levelOfItem = 2) {
   if(itemToSpawn === "Wooden Sword") {
-    return new GameWeapon(woodenSword, "physical", "Wooden Sword", "woodenSword", "Breaks easily, but leaves splinters.", levelOfItem);
+    let tempGameWeapon = new GameWeapon(woodenSword, "physical", "Wooden Sword", "woodenSword", "Breaks easily, but leaves splinters.", levelOfItem);
+    tempGameWeapon.stats = {
+      damage: weaponUpgradeData.woodenSword.damage[str(levelOfItem)],
+      maxDurability: weaponUpgradeData.woodenSword.durability[str(levelOfItem)],
+      durability: weaponUpgradeData.woodenSword.durability[str(levelOfItem)],
+    };
+    return tempGameWeapon;
   }
   else if(itemToSpawn === "Stone Axe") {
-    return new GameWeapon(stoneAxe, "physical", "Stone Axe", "stoneAxe", "Packs a heavy punch while remaining durable.", levelOfItem);
+    let tempGameWeapon = new GameWeapon(stoneAxe, "physical", "Stone Axe", "stoneAxe", "Packs a heavy punch while remaining durable.", levelOfItem);
+    tempGameWeapon.stats = {
+      damage: weaponUpgradeData.stoneAxe.damage[str(levelOfItem)],
+      maxDurability: weaponUpgradeData.stoneAxe.durability[str(levelOfItem)],
+      durability: weaponUpgradeData.stoneAxe.durability[str(levelOfItem)],
+    };
+    return tempGameWeapon;
   }
 }

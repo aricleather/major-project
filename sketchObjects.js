@@ -73,7 +73,7 @@ function initObjects() {
   closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, 0, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
-  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 1, inventoryButton, function() {
+  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, inventoryButton, function() {
     let tempId = openWindowIdCounter.val;
     openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
     spawners.playerInventory.call(openWindows.get(tempId));
@@ -83,6 +83,9 @@ function initObjects() {
     openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
     spawners.minigames.call(openWindows.get(tempId));
   }, 1.05, "Minigames");
+  battleButton = new ImageButton(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, battleIcon, function() {
+    gameState = 3;
+  }, 1.05, "Battle!");
 
   // Tab buttons
   autoCookiesTab = new TabButton(width * 0.775, height * 0.975, width * 0.15, height * 0.05, function() {
@@ -210,6 +213,7 @@ function resizeObjects() {
   closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
   inventoryOpenButton.resize(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
   miniGamesButton.resize(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  battleButton.resize(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
