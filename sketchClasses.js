@@ -683,6 +683,10 @@ class TextInput extends GameObject {
     this.blinkToggle = true;
     this.reToggleBlink = 0;
     this.endInput = false;
+
+    // Add event listener to 
+    this.keyboardFunction = this.getInput.bind(this);
+    window.addEventListener("keydown", this.keyboardFunction);
   }
 
   run() {
@@ -697,7 +701,7 @@ class TextInput extends GameObject {
     }
   }
 
-  getInput(key) {
+  getInput() {
     if(key.length === 1 && key.toUpperCase() !== key.toLowerCase() && !this.endInput) {
       this.currentText += key;
       this.reToggleBlink = millis() + 500;
@@ -711,6 +715,7 @@ class TextInput extends GameObject {
     }
     else if(key === "Enter") {
       buttonSelect1.play();
+      window.removeEventListener("keydown", this.keyboardFunction);
       this.endInput = true;
     }
   }
@@ -2092,9 +2097,15 @@ class TextBox extends GameObject {
     // Allows the writing of string to screen letter by letter
     this.messageBeingWritten = "";
 
+    // Timing for the "click to continue" blinker after text is written
+    this.blinkTimer = null;
+    this.blinkOrientation = true;
+
     // Formatting stuff
     this.leftX = this.x - this.width / 2;
     this.topY = this.y - this.height / 2;
+    this.blinkX = this.x + this.width * 0.47;
+    this.blinkY = this.y + this.height * 0.47;
 
     // For when all the text is exhausted
     this.close = false;
@@ -2123,7 +2134,6 @@ class TextBox extends GameObject {
       }
     }
 
-
     // Formatting
     rectMode(CENTER);
     stroke(255);
@@ -2138,6 +2148,17 @@ class TextBox extends GameObject {
     if(this.messageBeingWritten.length !== this.messageArr[0].message.length) {
       this.messageBeingWritten += this.messageArr[0].message[this.messageBeingWritten.length];
     }
+    else if (this.blinkTimer === null) {
+      this.blinkTimer = millis() + 250;
+    }
+    else {
+      // "true" is up, "false" is down
+      if(millis > this.blinkTimer) {
+        this.blinkOrientation = !this.blinkOrientation;
+        this.blinkTimer = millis() + 250;
+      }
+
+    }
 
     // Draw text at current length, if box clicked on switch to next message,
     // else delete self from text boxes map
@@ -2148,6 +2169,12 @@ class TextBox extends GameObject {
       this.messageBeingWritten = "";
       this.skip = false;
       this.nextBlock = false;
+      this.blinkTimer = null;
+      
+      if(this.messageArr[0].postFunc) {
+        this.messageArr[0].postFunc();
+      }
+
       gMouseToggle.val = this.priority + 1;
       if(this.messageArr[1]) {
         this.messageArr = this.messageArr.slice(1);

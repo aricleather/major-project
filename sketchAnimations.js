@@ -271,7 +271,8 @@ let gameMessages = {
     new Message("Intro time", function() {
       this.tempId = inputFieldIdCounter.val;
       openInputFields.set(this.tempId, new TextInput(width / 2, height / 2, width / 3, height * 0.15, this.tempId));
-    }, function() {
+    }, 
+    function() {
       openInputFields.get(this.tempId).run();
       if(!openInputFields.get(this.tempId).endInput) {
         return false;
@@ -279,7 +280,12 @@ let gameMessages = {
       else {
         return "skip";
       }
-    }), new Message("goodbye")],
+    },
+    function() {
+      playerName = openInputFields.get(this.tempId).currentText;
+      openInputFields.delete(this.tempId);
+    }
+    ), new Message("goodbye")],
 };
 
 let textBoxSpawners = {
