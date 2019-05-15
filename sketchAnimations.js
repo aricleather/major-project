@@ -267,13 +267,13 @@ animFunctions = {
 };
 
 let gameMessages = {
-  intro: [new Message("Hello"), 
-    new Message("Intro time", function() {
+  intro: [new Message("Hello."),
+    new Message("You appear to be new here..."), 
+    new Message("Tell me, what is your name?", function() {
       this.tempId = inputFieldIdCounter.val;
-      openInputFields.set(this.tempId, new TextInput(width / 2, height / 2, width / 3, height * 0.15, this.tempId));
+      openInputFields.set(this.tempId, new TextInput(width * 0.3 + 5, height * 0.85, width / 3, height * 0.03, 9, this.tempId));
     }, 
     function() {
-      openInputFields.get(this.tempId).run();
       if(!openInputFields.get(this.tempId).endInput) {
         return false;
       }
@@ -285,14 +285,17 @@ let gameMessages = {
       playerName = openInputFields.get(this.tempId).currentText;
       openInputFields.delete(this.tempId);
     }
-    ), new Message("goodbye")],
+    ), new Message("Come. There is lots to show you."),
+    new Message("And we are running out of time...")],
 };
 
 let textBoxSpawners = {
   intro: function() {
     let tempId = textBoxIdCounter.val;
-    openTextBoxes.set(tempId, new TextBox(width / 2, height * 0.8, width / 3, height * 0.15, 1, gameMessages.intro, width / 50, tempId, function() {
+    openTextBoxes.set(tempId, new TextBox(width / 2, height * 0.8, width * 0.4, height * 0.15, 1, gameMessages.intro, width / 50, tempId, 0, function() {
       background(0);
+    }, function() {
+      gameState = 1;
     }));
   }
 };

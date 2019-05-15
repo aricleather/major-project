@@ -81,13 +81,6 @@ let openTextBoxes = new Map();
 let openInputFields = new Map();
 let openGlobalMessages = [];
 let currentDialog = [];
-let input = null;
-
-function newInput(whichInput, x, y, width, height) {
-  if(whichInput === "text") {
-    input = new TextInput(x, y, width, height);
-  }
-}
 
 function cookieIncrement() {
   // Increment cookie counter on click and begin "popping" animation
@@ -286,11 +279,12 @@ function draw() {
     void 0;
   }
   runDialogBoxes();
-  if(input) {
-    input.run();
-  }
+
   for(let key of openTextBoxes.keys()) {
     openTextBoxes.get(key).run();
+  }
+  for(let key of openInputFields.keys()) {
+    openInputFields.get(key).run();
   }
 
   for(let i = 0; i < openGlobalMessages.length; i++) {
@@ -680,12 +674,6 @@ function keyPressed() {
     else if (key === "m") {
       newDialogBox(returnToMenuDialog);
     }
-    else if(key === "i") {
-      openInventory("player");
-    }
-  }
-  if(input) {
-    input.getInput(key);
   }
 }
 

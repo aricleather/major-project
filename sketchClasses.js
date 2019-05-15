@@ -675,11 +675,12 @@ class GlobalMessage extends GameObject {
 }
 
 class TextInput extends GameObject {
-  constructor(x, y, width, height, id) {
-    super(x, y, width, height);
+  constructor(x, y, width, tSize, maxLength, id) {
+    super(x, y, width, tSize);
     this.id = id;
     this.currentText = "";
-    this.tSize = 50;
+    this.tSize = tSize;
+    this.maxLength = maxLength;
     this.blinkToggle = true;
     this.reToggleBlink = 0;
     this.endInput = false;
@@ -690,7 +691,7 @@ class TextInput extends GameObject {
   }
 
   run() {
-    textSize(50);
+    textSize(this.tSize);
     fill(255);
     textAlign(LEFT, CENTER);
     text(this.currentText, this.x, this.y);
@@ -702,7 +703,7 @@ class TextInput extends GameObject {
   }
 
   getInput() {
-    if(key.length === 1 && key.toUpperCase() !== key.toLowerCase() && !this.endInput) {
+    if(key.length === 1 && this.currentText.length < this.maxLength && key.toUpperCase() !== key.toLowerCase() && !this.endInput) {
       this.currentText += key;
       this.reToggleBlink = millis() + 500;
       this.blinkToggle = false;
@@ -710,7 +711,7 @@ class TextInput extends GameObject {
     else if(key === "Backspace") {
       this.currentText = this.currentText.slice(0, -1);
     }
-    else if(key === " ") {
+    else if(key === " " && this.currentText.length < this.maxLength) {
       this.currentText += key;
     }
     else if(key === "Enter") {
@@ -1359,7 +1360,7 @@ class UpgradeMenu extends GameObject {
     this.upgItem.weaponLevel += levelsToUpgrade;
     this.upgItem.stats.damage = weaponUpgradeData[this.upgItem.id].damage[str(this.upgItem.weaponLevel)];
     this.upgItem.stats.maxDurability = weaponUpgradeData[this.upgItem.id].durability[str(this.upgItem.weaponLevel)];
-    openGlobalMessages.push(new GlobalMessage(this.x, this.y + this.height / 2 + this.width / 15, this.width, "Upraded to: " + str(this.upgItem.weaponLevel), 2000));
+    openGlobalMessages.push(new GlobalMessage(this.x, this.y + this.height / 2 + this.width / 15 + 10, this.width, "Upraded to level " + str(this.upgItem.weaponLevel) + ".", 2000));
     this.close = true;
   }
 
@@ -2080,7 +2081,7 @@ class Message {
 }
 
 class TextBox extends GameObject {
-  constructor(x, y, width, height, priority, messageArr, tSize, id, whileFunc = 0) {
+  constructor(x, y, width, height, priority, messageArr, tSize, id, preFunc = 0, whileFunc = 0, postFunc = 0) {
     super(x, y, width, height);
     // Vars
     this.priority = priority;
@@ -2088,8 +2089,14 @@ class TextBox extends GameObject {
     this.tSize = tSize;
     this.id = id;
     this.skip = false;
+    this.preFunc = preFunc;
     this.whileFunc = whileFunc;
+    this.postFunc = postFunc;
     this.nextBlock = false;
+    this.enter = false;
+
+    // Call formatText on first message to ensure it fits width of text box (calls after this are handled on message switch)
+    this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
 
     // Keep track of message functions, if they were done yet
     this.preFuncRan = false;
@@ -2105,10 +2112,14 @@ class TextBox extends GameObject {
     this.leftX = this.x - this.width / 2;
     this.topY = this.y - this.height / 2;
     this.blinkX = this.x + this.width * 0.47;
-    this.blinkY = this.y + this.height * 0.47;
+    this.blinkY = this.y + this.height * 0.37;
 
     // For when all the text is exhausted
     this.close = false;
+
+    // Use a bound function to allow enter to go to next message with an eventListener
+    this.enterFunction = this.enterPress.bind(this);
+    window.addEventListener("keydown", this.enterFunction);
   }
  
   run() {
@@ -2116,6 +2127,8 @@ class TextBox extends GameObject {
     if(this.whileFunc) {
       this.whileFunc();
     }
+
+    gMouseToggle.bound = this.priority;
 
     if(this.messageArr[0].preFunc && !this.preFuncRan) {
       this.messageArr[0].preFunc();
@@ -2138,7 +2151,7 @@ class TextBox extends GameObject {
     rectMode(CENTER);
     stroke(255);
     fill(0);
-    textAlign(LEFT, CENTER);
+    textAlign(LEFT, TOP);
     textSize(this.tSize);
    
     // Draw the rectangle
@@ -2148,40 +2161,62 @@ class TextBox extends GameObject {
     if(this.messageBeingWritten.length !== this.messageArr[0].message.length) {
       this.messageBeingWritten += this.messageArr[0].message[this.messageBeingWritten.length];
     }
-    else if (this.blinkTimer === null) {
-      this.blinkTimer = millis() + 250;
+    
+    // Once all letters added, add a little up down blinker that moves every 500ms
+    // If nextBlock remains true, this will never fire, the blinker will never appear
+    else if (!this.nextBlock && this.blinkTimer === null) {
+      this.blinkTimer = millis() + 500;
     }
-    else {
+    else if (this.blinkTimer) {
       // "true" is up, "false" is down
-      if(millis > this.blinkTimer) {
+      if(millis() > this.blinkTimer) {
         this.blinkOrientation = !this.blinkOrientation;
-        this.blinkTimer = millis() + 250;
+        this.blinkTimer = millis() + 500;
       }
-
+      fill(0);
+      if(this.blinkOrientation) {
+        rect(this.blinkX, this.blinkY, 5, 5);
+      }
+      else {
+        rect(this.blinkX, this.blinkY + 5, 5, 5);
+      }
     }
 
     // Draw text at current length, if box clicked on switch to next message,
     // else delete self from text boxes map
     noStroke();
     fill(255);
-    text(this.messageBeingWritten, this.leftX + 5, this.topY + this.tSize / 2 + 5);
-    if(this.skip || !this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
+    text(this.messageBeingWritten, this.leftX + 5, this.topY + 5);
+    // On skip call from message func, or enter press when next is not blocked, or mouse press when x is not blocked, move to next msg
+    if(this.skip || this.enter && !this.nextBlock || !this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
       this.messageBeingWritten = "";
       this.skip = false;
       this.nextBlock = false;
+      this.enter = false;
       this.blinkTimer = null;
       
       if(this.messageArr[0].postFunc) {
         this.messageArr[0].postFunc();
       }
 
+      // Slice so that message "1" is now message "0", moving forward
       gMouseToggle.val = this.priority + 1;
       if(this.messageArr[1]) {
         this.messageArr = this.messageArr.slice(1);
+        this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
       }
       else {
+        // Destroy self and remove enter event listener
+        window.removeEventListener("keydown", this.enterFunction);
+        if(this.postFunc) {
+          this.postFunc();
+        }
         openTextBoxes.delete(this.id);
       }
     }
+  }
+
+  enterPress() {
+    this.enter = true;
   }
 }
