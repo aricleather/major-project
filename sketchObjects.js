@@ -84,7 +84,11 @@ function initObjects() {
     spawners.minigames.call(openWindows.get(tempId));
   }, 1.05, "Minigames");
   battleButton = new ImageButton(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, battleIcon, function() {
-    gameState = 3;
+    startAnimation(animations.blackScroll, 0, function() {
+      startAnimation(animations.blackScrollReverse, 0, function() {
+        gameState = 3;
+      });
+    });
   }, 1.05, "Battle!");
 
   // Tab buttons

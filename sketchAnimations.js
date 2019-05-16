@@ -1,108 +1,6 @@
 // Classes that when run play animations, which may be interactive (ex. intro animation, prompting for player name)
 
-
-
-class NewGameAnimation {
-  // Run automatically when new player detected. Introduces player, asks them their name
-  constructor() {
-    // Vars
-    this.animationPhase = 0;
-    this.lastAnimationPhase = null;
-    this.toggleFadeBackground = false;
-    this.fadeBackgroundAlpha = 255;
-
-    this.tSize = width / 40;
-    this.textAlpha = 255;
-    this.x = width / 2;
-    this.y = height / 3;
-
-    this.texts = 
-    [
-      "A novice cookie baker, hmm...\n" +
-      "Yes, I have been expecting you.\n" +
-      "Come, we must begin.",
-      "What is your name?",
-      "Well, nice to meet you, ",
-      "Let me guide you."];
-    this.fullText = this.texts[this.animationPhase];
-
-    this.input = new TextInput(width * 0.3, height * 0.8, 100, 100); // Used to ask player's name
-    this.nextLetterTime = millis() + 500;
-    this.fadeOutTime;
-    this.currentText = "";
-  }
-
-  run() {
-    // User cannot make any input during anim
-    gMouseToggle.val = 2;
-    
-
-    if(this.toggleFadeBackground) {
-
-      // Fade in the game using a rectangle being filled with a lowering alpha value
-      fill(0, this.fadeBackgroundAlpha);
-      rectMode(CORNER);
-      rect(0, 0, width, height);
-      this.fadeBackgroundAlpha -= 4.25;
-      if(this.fadeBackgroundAlpha <= 0) {
-        // Once game faded in, end animation
-        animationState = false;
-      }
-    }
-
-    else {
-      background(0);
-    
-      // What is happening here? messageOnScreenAnim is called in the 'this' scope. When it becomes true (text is fully drawn),
-      // the player name input comes up if animationPhase is 1. If not, setFadeTime() is called,
-      // but it will only set this.fadeOutTime once due to a variable that tracks whether or not it has been done
-      // Once messageOnScreenFade has reduced the alpha to 0, it becomes true, then nextPhase() is run, resetting
-      // the process until all 4 animation phases have occured
-      if(animFunctions.messageOnScreenAnim.call(this)) {
-        if(this.animationPhase === 1 && !playerName) {
-          animFunctions.displayMessageOnScreen(animFunctions.displayMessageOnScreen(this.currentText, this.tSize, this.x, this.y, this.textAlpha));
-          // Links input to this.input so keyPressed can pass its event
-          input = this.input;
-          if(this.input.run()) {
-            playerName = this.input.run();
-            this.texts[2] += playerName + ".";
-            input = null;
-          }
-        }
-
-        else {
-          this.setFadeTime();
-          if(animFunctions.messageOnScreenFade.call(this)) {
-            this.nextPhase();
-          }
-        }
-      }
-    }
-  }
-
-  setFadeTime() {
-    if(this.animationPhase !== this.lastAnimationPhase) {
-      this.fadeOutTime = millis() + 2500;
-      this.lastAnimationPhase = this.animationPhase;
-    }
-  }
-
-  nextPhase() {
-    if(this.animationPhase === 3) {
-      // Once all 4 are done, end the animation
-      gameState = 1;
-      this.toggleFadeBackground = true;
-    }
-    this.animationPhase += 1;
-    this.fullText = this.texts[this.animationPhase];
-    this.currentText = "";
-    this.textAlpha = 255;
-  }
-}
-
 class TitleScreenAnimation1 {
-  // Unlike newGameAnimation, everything going on here only ever happens once,
-  // so there is no need to compact it down into reoccuring functions like I did with newGameAnimation
   constructor() {
     // Vars
     this.animationPhase = 0;
@@ -122,7 +20,7 @@ class TitleScreenAnimation1 {
 
   run() {
     gMouseToggle.val = 1;
-    gameState = 3;
+    gameState = 4;
     background(0);
 
     if(this.animationPhase === 0) {
@@ -181,7 +79,7 @@ class TitleScreenAnimation1 {
       this.blinkToggle = true;
       this.blinkingTextLine();
       if(millis() > this.nextAnimation) {
-        startAnimation("newGameAnimation");
+        void 0;
       }
     }
   }
@@ -267,6 +165,8 @@ animFunctions = {
 };
 
 let gameMessages = {
+  // Provides short intro where player is being spoken to. Player is asked for their name which
+  // is stored as playerName using a textInput field.
   intro: [new Message("Hello."),
     new Message("You appear to be new here..."), 
     new Message("Tell me, what is your name?", function() {
@@ -298,4 +198,52 @@ let textBoxSpawners = {
       gameState = 1;
     }));
   }
+};
+
+let animations = {
+  blackScroll: {
+    run: function() {
+      rectMode(CORNER);
+      fill(0);
+      rect(0, 0, this.rectWidth, height);
+      this.rectWidth += this.acc;
+      this.acc *= 1.17;
+      if(this.rectWidth >= width) {
+        this.end = true;
+      }
+    },
+
+    reset: function() {
+      this.rectWidth = 0;
+      this.end = false;
+      this.acc = 1;
+    },
+
+    rectWidth: 0,
+    end: false,
+    acc: 1,
+  },
+
+  blackScrollReverse: {
+    run: function() {
+      rectMode(CORNER);
+      fill(0);
+      rect(width, 0, -width + this.rectWidth, height);
+      this.rectWidth += this.acc;
+      this.acc *= 1.17;
+      if(this.rectWidth >= width) {
+        this.end = true;
+      }
+    },
+
+    reset: function() {
+      this.rectWidth = 0;
+      this.end = false;
+      this.acc = 1;
+    },
+
+    rectWidth: 0,
+    end: false,
+    acc: 1,
+  },
 };

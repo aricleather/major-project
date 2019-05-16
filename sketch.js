@@ -80,6 +80,7 @@ let gMouse = 0;
 let openTextBoxes = new Map();
 let openInputFields = new Map();
 let openGlobalMessages = [];
+let openAnimations = [];
 let currentDialog = [];
 
 function cookieIncrement() {
@@ -275,7 +276,6 @@ function draw() {
     displayBattleMap();
   }
   else if (gameState === 4) {
-    // For anything that needs nothing to happen
     void 0;
   }
   runDialogBoxes();
@@ -291,6 +291,18 @@ function draw() {
     openGlobalMessages[i].run();
     if (openGlobalMessages[i].close === true) {
       openGlobalMessages.splice(i, 1);
+    }
+  }
+
+  for(let i = 0; i < openAnimations.length; i++) {
+    openAnimations[i].run();
+    if (openAnimations[i].end === true) {
+      openAnimations[i].reset();
+      if(openAnimations[i].postFunc) {
+        openAnimations[i].postFunc();
+        delete openAnimations[i].postFunc;
+      }
+      openAnimations.splice(i, 1);
     }
   }
 
@@ -739,4 +751,14 @@ function spawnItem(itemToSpawn, levelOfItem = 2) {
     };
     return tempGameWeapon;
   }
+}
+
+function startAnimation(whichAnimation, preFunc = 0, postFunc = 0) {
+  if(preFunc) {
+    preFunc();
+  }
+  if(postFunc) {
+    whichAnimation.postFunc = postFunc;
+  }
+  openAnimations.push(whichAnimation);
 }
