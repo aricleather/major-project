@@ -155,7 +155,6 @@ class SpinImage extends GameObject {
   }
 }
 
-
 class ImageButton extends GameObject {
   // Same as ImageObject but enlarges on hover for a more button-like effect
   constructor(x, y, width, height, priority, objImage, clicked, hoverScalar, objText) {
@@ -550,6 +549,20 @@ class ScrollBar extends GameObject {
     this.scrollBarHeight = this.scrollDistance / this.scrollCount;
     this.scrollDistance = scrollDistance - this.scrollBarHeight;
     this.deltaY = this.scrollAmount * (this.scrollDistance / this.scrollCount);
+  }
+}
+
+class BattleMenuObject extends GameObject  {
+  constructor(battleImage, battleText) {
+    super(width * (2 * battleMenuNumber + 1) / 6, height / 2, width / 6, height / 2);
+    this.battleImage = battleImage;
+    this.battleText = battleText;
+
+    this.battleMenuNumber++;
+  }
+
+  run () {
+    image(this.battleImage, this.x, this.y, this.width, this.height);
   }
 }
 
@@ -2099,7 +2112,8 @@ class TextBox extends GameObject {
     this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
 
     // Keep track of message functions, if they were done yet
-    this.preFuncRan = false;
+    this.messagePreFuncRan = false;
+    this.mainPreFuncRan = false;
 
     // Allows the writing of string to screen letter by letter
     this.messageBeingWritten = "";
@@ -2111,8 +2125,8 @@ class TextBox extends GameObject {
     // Formatting stuff
     this.leftX = this.x - this.width / 2;
     this.topY = this.y - this.height / 2;
-    this.blinkX = this.x + this.width * 0.47;
-    this.blinkY = this.y + this.height * 0.37;
+    this.blinkX = this.x + this.width / 2 - 10;
+    this.blinkY = this.y + this.height / 2 - 15;
 
     // For when all the text is exhausted
     this.close = false;
@@ -2124,15 +2138,22 @@ class TextBox extends GameObject {
  
   run() {
     this.calcMouse();
+    if(!this.mainPreFuncRan && this.preFunc) {
+      this.preFunc();
+    }
+    else {
+      this.mainPreFuncRan = true;
+    }
+
     if(this.whileFunc) {
       this.whileFunc();
     }
 
     gMouseToggle.bound = this.priority;
 
-    if(this.messageArr[0].preFunc && !this.preFuncRan) {
+    if(this.messageArr[0].preFunc && !this.messagePreFuncRan) {
       this.messageArr[0].preFunc();
-      this.preFuncRan = true;
+      this.messagePreFuncRan = true;
     }
     else if(this.messageArr[0].whileFunc) {
       let whileFuncCheck = this.messageArr[0].whileFunc();

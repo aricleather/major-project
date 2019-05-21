@@ -310,15 +310,17 @@ function draw() {
 }
 
 function menu() { // gameState 0
-  displayMenu();
-  animateMenu();
   if(window.localStorage.length > 0) {
     titleLoadButton.run();
+    titleOptionsButton.run();
+    displayMenu();
+    animateMenu();
   }
   else {
+    background(0);
     titleNewGameButton.run();
   }
-  titleOptionsButton.run();
+
   textSize(15);
   text("Version 0.1", width * 0.93, height * 0.97);
   // If save file was stored as cookie in browser, show load option
@@ -753,12 +755,17 @@ function spawnItem(itemToSpawn, levelOfItem = 2) {
   }
 }
 
-function startAnimation(whichAnimation, preFunc = 0, postFunc = 0) {
+function startAnimation(whichAnimation, preFunc = 0, postFunc = 0, midFunc = 0) {
+  // The pre-func is handled in startAnimation, post-func is handled in the draw loop
+  // where animations in the animationArray are ran, mid-funcs are handled by the animations
   if(preFunc) {
     preFunc();
   }
   if(postFunc) {
     whichAnimation.postFunc = postFunc;
+  }
+  if(midFunc) {
+    whichAnimation.midFunc = midFunc;
   }
   openAnimations.push(whichAnimation);
 }

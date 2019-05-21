@@ -22,6 +22,9 @@ let returnToMenuDialog;
 let shopNumber = 0;
 let shopWeaponNumber = 0;
 let achievementNumber = 0;
+let battleMenuNumber = 0;
+
+let battleMenuObjects = [];
 
 let spawners;
 
@@ -31,7 +34,7 @@ let playerInventory = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0
 function initObjects() {
   // Buttons
   titleNewGameButton = new Button(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, 1, "New Game", function() {
-    buttonSelect1.play();
+    textBoxSpawners.intro();
     // gameState = 1; // Defines "start" menu button, on click switches to gameState 1 (mainGame())
   });
   titleOptionsButton = new Button(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH, 0, "Options", function() { // Options button on main menu
@@ -84,10 +87,8 @@ function initObjects() {
     spawners.minigames.call(openWindows.get(tempId));
   }, 1.05, "Minigames");
   battleButton = new ImageButton(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, battleIcon, function() {
-    startAnimation(animations.blackScroll, 0, function() {
-      startAnimation(animations.blackScrollReverse, 0, function() {
-        gameState = 3;
-      });
+    startAnimation(animations.blackScrollFull, 0, 0, function() {
+      gameState = 3;
     });
   }, 1.05, "Battle!");
 
@@ -120,9 +121,6 @@ function initObjects() {
     gameState = 0;
     saveGame();
     loadSaveFile();
-    if(window.localStorage.length === 0) {
-      startAnimation("titleScreenAnimation1");
-    }
   },
   function() {
     void 0;
