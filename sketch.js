@@ -94,6 +94,7 @@ function cookieIncrement() {
 
 // Load content used in game
 let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon; // Images
+let battle1Icon;
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
@@ -128,6 +129,8 @@ let hoverFillOptions = 200;
 let cookieGetText;
 let tempText;
 
+let battleMenuScroll = 0;
+
 function preload() {
   // Images
   cookie = loadImage("assets/cookie1.png");
@@ -145,6 +148,7 @@ function preload() {
   inventoryButton = loadImage("assets/invButton.png");
   minigameIcon = loadImage("assets/minigameIcon.png");
   battleIcon = loadImage("assets/battleIcon.png");
+  battle1Icon = loadImage("assets/battle1Icon.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -563,6 +567,9 @@ function cookieFall() {
 
 function displayBattleMap() {
   text("Ya i'm not done this yet", width / 2, height / 2);
+  for(let i = battleMenuScroll; i < 1; i++) {
+    battleMenuObjects[i].run();
+  }
 }
 
 function newDialogBox(theDialog) {

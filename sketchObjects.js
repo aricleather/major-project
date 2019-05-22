@@ -12,6 +12,9 @@ let cookieSpinner;
 let bakeryObj, ovenObj, factoryObj;
 let shopItems;
 
+// Battles
+let battle1;
+
 // Global scroll bar declarations
 let shopScrollBar;
 
@@ -133,12 +136,11 @@ function initObjects() {
     void 0;
   });
 
-  // Global messages
+  // Battle Menu objects
+  battleMenuObjects.push(new BattleMenuObject(battle1Icon, "Level 1:\nGoblin Plain"));
 
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
-
-
 
   spawners = {
     playerInventory: function() {

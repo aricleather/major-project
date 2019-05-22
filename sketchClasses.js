@@ -559,10 +559,24 @@ class BattleMenuObject extends GameObject  {
     this.battleText = battleText;
 
     this.battleMenuNumber++;
+
+    // Scaling
+    this.imageWidth = width / 5;
+    this.imageHeight = width / 5 * this.battleImage.width / this.battleImage.height;
+    this.tSize = this.width / 10;
+
+    // Interactive objects
+    this.battleButton = new ImageButton();
+
+    // Positioning 
+    this.textY = this.y + this.imageHeight / 2;
   }
 
   run () {
-    image(this.battleImage, this.x, this.y, this.width, this.height);
+    image(this.battleImage, this.x, this.y, this.imageWidth, this.imageHeight);
+    textSize(this.tSize);
+    textAlign(CENTER, TOP);
+    text(this.battleText, this.x, this.textY);
   }
 }
 
@@ -2085,8 +2099,9 @@ let songs = {
 };
 
 class Message {
-  constructor(message, preFunc = 0, whileFunc = 0, postFunc = 0) {
+  constructor(message, delay = 0, preFunc = 0, whileFunc = 0, postFunc = 0) {
     this.message = message;
+    this.delay = delay;
     this.preFunc = preFunc;
     this.whileFunc = whileFunc;
     this.postFunc = postFunc;
@@ -2109,7 +2124,9 @@ class TextBox extends GameObject {
     this.enter = false;
 
     // Call formatText on first message to ensure it fits width of text box (calls after this are handled on message switch)
+    // Also grab the delay from the first message, calls after this also handled on message switch
     this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
+    this.delay = millis() + messageArr[0].delay * 1000 || null;
 
     // Keep track of message functions, if they were done yet
     this.messagePreFuncRan = false;
@@ -2155,6 +2172,7 @@ class TextBox extends GameObject {
       this.messageArr[0].preFunc();
       this.messagePreFuncRan = true;
     }
+
     else if(this.messageArr[0].whileFunc) {
       let whileFuncCheck = this.messageArr[0].whileFunc();
       if(whileFuncCheck === "skip") {
@@ -2168,71 +2186,76 @@ class TextBox extends GameObject {
       }
     }
 
+    // If the message has a delay, nothing happens until the delay has passed
+    if(this.delay !== null && millis() > this.delay) {
     // Formatting
-    rectMode(CENTER);
-    stroke(255);
-    fill(0);
-    textAlign(LEFT, TOP);
-    textSize(this.tSize);
+      rectMode(CENTER);
+      stroke(255);
+      fill(0);
+      textAlign(LEFT, TOP);
+      textSize(this.tSize);
    
-    // Draw the rectangle
-    rect(this.x, this.y, this.width, this.height);
+      // Draw the rectangle
+      rect(this.x, this.y, this.width, this.height);
 
-    // Add new letter every frame until all letters added
-    if(this.messageBeingWritten.length !== this.messageArr[0].message.length) {
-      this.messageBeingWritten += this.messageArr[0].message[this.messageBeingWritten.length];
-    }
+      // Add new letter every frame until all letters added
+      if(this.messageBeingWritten.length !== this.messageArr[0].message.length) {
+        this.messageBeingWritten += this.messageArr[0].message[this.messageBeingWritten.length];
+      }
     
-    // Once all letters added, add a little up down blinker that moves every 500ms
-    // If nextBlock remains true, this will never fire, the blinker will never appear
-    else if (!this.nextBlock && this.blinkTimer === null) {
-      this.blinkTimer = millis() + 500;
-    }
-    else if (this.blinkTimer) {
-      // "true" is up, "false" is down
-      if(millis() > this.blinkTimer) {
-        this.blinkOrientation = !this.blinkOrientation;
+      // Once all letters added, add a little up down blinker that moves every 500ms
+      // If nextBlock remains true, this will never fire, the blinker will never appear
+      else if (!this.nextBlock && this.blinkTimer === null) {
         this.blinkTimer = millis() + 500;
       }
-      fill(0);
-      if(this.blinkOrientation) {
-        rect(this.blinkX, this.blinkY, 5, 5);
-      }
-      else {
-        rect(this.blinkX, this.blinkY + 5, 5, 5);
-      }
-    }
-
-    // Draw text at current length, if box clicked on switch to next message,
-    // else delete self from text boxes map
-    noStroke();
-    fill(255);
-    text(this.messageBeingWritten, this.leftX + 5, this.topY + 5);
-    // On skip call from message func, or enter press when next is not blocked, or mouse press when x is not blocked, move to next msg
-    if(this.skip || this.enter && !this.nextBlock || !this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
-      this.messageBeingWritten = "";
-      this.skip = false;
-      this.nextBlock = false;
-      this.enter = false;
-      this.blinkTimer = null;
-      
-      if(this.messageArr[0].postFunc) {
-        this.messageArr[0].postFunc();
-      }
-
-      // Slice so that message "1" is now message "0", moving forward
-      gMouseToggle.val = this.priority + 1;
-      if(this.messageArr[1]) {
-        this.messageArr = this.messageArr.slice(1);
-        this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
-      }
-      else {
-        // Destroy self and remove enter event listener
-        window.removeEventListener("keydown", this.enterFunction);
-        if(this.postFunc) {
-          this.postFunc();
+      else if (this.blinkTimer) {
+      // "true" is up, "false" is down
+        if(millis() > this.blinkTimer) {
+          this.blinkOrientation = !this.blinkOrientation;
+          this.blinkTimer = millis() + 500;
         }
-        openTextBoxes.delete(this.id);
+        fill(0);
+        if(this.blinkOrientation) {
+          rect(this.blinkX, this.blinkY, 5, 5);
+        }
+        else {
+          rect(this.blinkX, this.blinkY + 5, 5, 5);
+        }
+      }
+
+      // Draw text at current length, if box clicked on switch to next message,
+      // else delete self from text boxes map
+      noStroke();
+      fill(255);
+      text(this.messageBeingWritten, this.leftX + 5, this.topY + 5);
+      // On skip call from message func, or enter press when next is not blocked, or mouse press when x is not blocked, move to next msg
+      if(this.skip || this.enter && !this.nextBlock || !this.nextBlock && mouseIsPressed && this.mouse && gMouse <= this.priority) {
+        this.messageBeingWritten = "";
+        this.skip = false;
+        this.nextBlock = false;
+        this.enter = false;
+        this.blinkTimer = null;
+      
+        if(this.messageArr[0].postFunc) {
+          this.messageArr[0].postFunc();
+        }
+
+        // Slice so that message "1" is now message "0", moving forward
+        gMouseToggle.val = this.priority + 1;
+        if(this.messageArr[1]) {
+          this.messageArr = this.messageArr.slice(1);
+          this.messageArr[0].message = formatText(this.messageArr[0].message, this.width, this.tSize);
+          this.delay = this.messageArr[0].delay * 1000 + millis() || null;
+        }
+
+        else {
+        // Destroy self and remove enter event listener
+          window.removeEventListener("keydown", this.enterFunction);
+          if(this.postFunc) {
+            this.postFunc();
+          }
+          openTextBoxes.delete(this.id);
+        }
       }
     }
   }

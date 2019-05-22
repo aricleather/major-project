@@ -1,9 +1,9 @@
 let gameMessages = {
   // Provides short intro where player is being spoken to. Player is asked for their name which
   // is stored as playerName using a textInput field.
-  intro: [new Message("Hello."),
-    new Message("You appear to be new here..."), 
-    new Message("Tell me, what is your name?", function() {
+  intro: [new Message("Hello.", 1),
+    new Message("You appear to be new here...", 1), 
+    new Message("Tell me, what is your name?", 0, function() {
       this.tempId = inputFieldIdCounter.val;
       openInputFields.set(this.tempId, new TextInput(width * 0.3 + 5, height * 0.85, width / 3, height * 0.03, 9, this.tempId));
     }, 
