@@ -110,6 +110,7 @@ let gameState = 0;
 let shopState = 0;
 let shopTab = 1;
 let achievementState = 0;
+let battleState = null;
 
 // Clicker game variables:
 let cookies = 0;
@@ -281,6 +282,9 @@ function draw() {
   }
   else if (gameState === 4) {
     void 0;
+  }
+  else if(gameState === 5) {
+    text(str(battleState), width / 2, height / 2);
   }
   runDialogBoxes();
 
@@ -566,10 +570,15 @@ function cookieFall() {
 }
 
 function displayBattleMap() {
-  text("Ya i'm not done this yet", width / 2, height / 2);
-  for(let i = battleMenuScroll; i < 1; i++) {
+  for(let i = battleMenuScroll; i < 3; i++) {
     battleMenuObjects[i].run();
   }
+  battleBackButton.run();
+}
+
+function startBattle(level) {
+  battleState = level;
+  gameState = 5;
 }
 
 function newDialogBox(theDialog) {

@@ -49,6 +49,11 @@ function initObjects() {
   optionsDeleteDataButton = new Button(width / 2, height * 0.5, scalars.menuButtonW, scalars.menuButtonH * 1.5, 0, "Delete Data", function() {
     newDialogBox(deleteDataDialog);
   });
+  battleBackButton = new Button(width * 0.9, height * 0.9, scalars.menuButtonW, scalars.menuButtonH, 0, "Back", function() {
+    startAnimation(animations.blackScrollFull, 0, 0, function() {
+      gameState = 1;
+    });
+  });
 
   // Image objects
   // Main cookie object. On click, cookieIncrement() and increase width and height of cookie to create popping animation
@@ -138,6 +143,8 @@ function initObjects() {
 
   // Battle Menu objects
   battleMenuObjects.push(new BattleMenuObject(battle1Icon, "Level 1:\nGoblin Plain"));
+  battleMenuObjects.push(new BattleMenuObject(battle1Icon, "Level 2:\nGoblin Mountain"));
+  battleMenuObjects.push(new BattleMenuObject(battle1Icon, "Level 3:\nGoblin Castle"));
 
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);

@@ -557,8 +557,9 @@ class BattleMenuObject extends GameObject  {
     super(width * (2 * battleMenuNumber + 1) / 6, height / 2, width / 6, height / 2);
     this.battleImage = battleImage;
     this.battleText = battleText;
+    this.level = battleMenuNumber + 1;
 
-    this.battleMenuNumber++;
+    battleMenuNumber++;
 
     // Scaling
     this.imageWidth = width / 5;
@@ -566,14 +567,17 @@ class BattleMenuObject extends GameObject  {
     this.tSize = this.width / 10;
 
     // Interactive objects
-    this.battleButton = new ImageButton();
-
+    let battleButtonFunc = function() {
+      startBattle(this.level);
+    }.bind(this);
+    this.battleButton = new ImageButton(this.x, this.y, this.imageWidth, this.imageHeight, 0, this.battleImage, 
+      battleButtonFunc, 1.05, "");
     // Positioning 
     this.textY = this.y + this.imageHeight / 2;
   }
 
   run () {
-    image(this.battleImage, this.x, this.y, this.imageWidth, this.imageHeight);
+    this.battleButton.run();
     textSize(this.tSize);
     textAlign(CENTER, TOP);
     text(this.battleText, this.x, this.textY);
