@@ -75,6 +75,63 @@ let animations = {
     acc: 1,
   },
 
+  blackScrollFullMessage: {
+    run: function() {
+      rectMode(CORNER);
+      fill(0);
+      if(!this.reverse) {
+        rect(0, 0, this.rectWidth, height);
+        if(this.rectWidth >= width) {
+          if(this.delay === 0) {
+            textSize(30);
+            fill(0, this.alpha);
+            text(this.message, width / 2, height / 2);
+            if(this.alpha < 255) {
+                
+              this.alpha += 8.5;
+            }
+            else {
+              this.delay = millis() + 1000;
+            }
+          }
+          else if (millis() > this.delay) {
+            if(this.midFunc) {
+              this.midFunc();
+            }
+            this.reverse = true;
+            this.rectWidth = 0;
+          }
+        }
+      }
+      else {
+        rect(width, 0, -width + this.rectWidth, height);
+        if(this.rectWidth >= width) {
+          this.end = true;
+        }
+      }
+      this.rectWidth += this.acc;
+      this.acc = this.reverse ? this.acc /= 1.17 : this.acc *= 1.17;
+    },
+  
+    reset: function() {
+      this.rectWidth = 0;
+      this.end = false;
+      this.acc = 1;
+      this.reverse = false;
+      this.message = "";
+      this.delay = 0;
+      this.alpha = 0;
+    },
+  
+    alpha: 0,
+    delay: 0,
+    message: "",
+    reverse: false,
+    rectWidth: 0,
+    end: false,
+    acc: 1,
+  },
+
   blackScrollHalf: {
     run: function() {
       rectMode(CORNER);

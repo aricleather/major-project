@@ -2268,3 +2268,32 @@ class TextBox extends GameObject {
     this.enter = true;
   }
 }
+
+class Battle {
+  constructor(level) {
+    this.level = level;
+    this.battlePhase = 0;
+
+    // Phase 0
+    this.animCreated = false;
+  }
+
+  run() {
+    if(this.battlePhase === 0) {
+      if(!this.animCreated) {
+        this.introAnim();
+      }
+    }
+    else if(this.battlePhase === 1) {
+      void 0;
+    }
+  }
+
+  introAnim() {
+    let animFunc = function() {
+      this.battlePhase = 1;
+    }.bind(this);
+    startAnimation(animations.blackScrollFullMessage, 0, 0, animFunc, "Test msg");
+    this.animCreated = true;
+  }
+}

@@ -111,6 +111,7 @@ let shopState = 0;
 let shopTab = 1;
 let achievementState = 0;
 let battleState = null;
+let battle = null;
 
 // Clicker game variables:
 let cookies = 0;
@@ -284,7 +285,7 @@ function draw() {
     void 0;
   }
   else if(gameState === 5) {
-    text(str(battleState), width / 2, height / 2);
+    battle.run();
   }
   runDialogBoxes();
 
@@ -578,6 +579,7 @@ function displayBattleMap() {
 
 function startBattle(level) {
   battleState = level;
+  battle = new Battle(battleState);
   gameState = 5;
 }
 
@@ -771,7 +773,7 @@ function spawnItem(itemToSpawn, levelOfItem = 2) {
   }
 }
 
-function startAnimation(whichAnimation, preFunc = 0, postFunc = 0, midFunc = 0) {
+function startAnimation(whichAnimation, preFunc = 0, postFunc = 0, midFunc = 0, message = 0) {
   // The pre-func is handled in startAnimation, post-func is handled in the draw loop
   // where animations in the animationArray are ran, mid-funcs are handled by the animations
   if(preFunc) {
@@ -782,6 +784,9 @@ function startAnimation(whichAnimation, preFunc = 0, postFunc = 0, midFunc = 0) 
   }
   if(midFunc) {
     whichAnimation.midFunc = midFunc;
+  }
+  if(message) {
+    whichAnimation.message = message;
   }
   openAnimations.push(whichAnimation);
 }
