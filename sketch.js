@@ -577,9 +577,9 @@ function displayBattleMap() {
   battleBackButton.run();
 }
 
-function startBattle(level) {
+function startBattle(level, name) {
   battleState = level;
-  battle = new Battle(battleState);
+  battle = new Battle(battleState, name);
   gameState = 5;
 }
 

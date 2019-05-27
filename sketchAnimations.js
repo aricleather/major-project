@@ -82,16 +82,16 @@ let animations = {
       if(!this.reverse) {
         rect(0, 0, this.rectWidth, height);
         if(this.rectWidth >= width) {
+          this.stopRect = true;
+          textSize(30);
+          fill(255, this.alpha);
+          text(this.message, width / 2, height / 2);
           if(this.delay === 0) {
-            textSize(30);
-            fill(0, this.alpha);
-            text(this.message, width / 2, height / 2);
             if(this.alpha < 255) {
-                
               this.alpha += 8.5;
             }
             else {
-              this.delay = millis() + 1000;
+              this.delay = millis() + 3000;
             }
           }
           else if (millis() > this.delay) {
@@ -100,6 +100,9 @@ let animations = {
             }
             this.reverse = true;
             this.rectWidth = 0;
+            this.acc = 1;
+            this.delay = 0;
+            this.stopRect = false;
           }
         }
       }
@@ -109,8 +112,10 @@ let animations = {
           this.end = true;
         }
       }
-      this.rectWidth += this.acc;
-      this.acc = this.reverse ? this.acc /= 1.17 : this.acc *= 1.17;
+      if(!this.stopRect) {
+        this.rectWidth += this.acc;
+        this.acc *= 1.17;
+      }
     },
   
     reset: function() {
@@ -121,6 +126,7 @@ let animations = {
       this.message = "";
       this.delay = 0;
       this.alpha = 0;
+      this.stopRect = false;
     },
   
     alpha: 0,
@@ -130,6 +136,7 @@ let animations = {
     rectWidth: 0,
     end: false,
     acc: 1,
+    stopRect: false,
   },
 
   blackScrollHalf: {

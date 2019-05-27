@@ -553,10 +553,11 @@ class ScrollBar extends GameObject {
 }
 
 class BattleMenuObject extends GameObject  {
-  constructor(battleImage, battleText) {
+  constructor(battleImage, battleText, name) {
     super(width * (2 * battleMenuNumber + 1) / 6, height / 2, width / 6, height / 2);
     this.battleImage = battleImage;
     this.battleText = battleText;
+    this.name = name;
     this.level = battleMenuNumber + 1;
 
     battleMenuNumber++;
@@ -568,7 +569,7 @@ class BattleMenuObject extends GameObject  {
 
     // Interactive objects
     let battleButtonFunc = function() {
-      startBattle(this.level);
+      startBattle(this.level, this.name);
     }.bind(this);
     this.battleButton = new ImageButton(this.x, this.y, this.imageWidth, this.imageHeight, 0, this.battleImage, 
       battleButtonFunc, 1.05, "");
@@ -2270,9 +2271,20 @@ class TextBox extends GameObject {
 }
 
 class Battle {
-  constructor(level) {
+  constructor(level, name) {
     this.level = level;
+    this.name = name;
     this.battlePhase = 0;
+    this.map = battleMaps["1"];
+
+    // Controls amount of tiles drawn to screen
+    this.gridRows = 20;
+    this.gridCols = 40;
+    this.tileWidth = width / this.gridCols;
+    this.tileHeight = height / this.gridRows;
+
+    // [x, y] coord of mouse in terms of tile
+    this.mCoord = [];
 
     // Phase 0
     this.animCreated = false;
@@ -2280,12 +2292,15 @@ class Battle {
 
   run() {
     if(this.battlePhase === 0) {
+      // Do the intro animation, the animation will switch the battle phase
       if(!this.animCreated) {
         this.introAnim();
       }
     }
     else if(this.battlePhase === 1) {
-      void 0;
+      this.fillTiles();
+      this.mouseTile();
+      this.drawGrid();
     }
   }
 
@@ -2293,7 +2308,60 @@ class Battle {
     let animFunc = function() {
       this.battlePhase = 1;
     }.bind(this);
-    startAnimation(animations.blackScrollFullMessage, 0, 0, animFunc, "Test msg");
+    let animMsg = "Level " + str(this.level) + ":\n" + this.name + "\n\n\nBattle!";
+    startAnimation(animations.blackScrollFullMessage, 0, 0, animFunc, animMsg);
     this.animCreated = true;
+  }
+
+  drawGrid() {
+    // Draw the grid
+    stroke(20);
+    strokeWeight(1);
+    for(let i = 1; i < this.gridRows; i++) { // Rows
+      let tempY = i / this.gridRows * height;
+      line(0, tempY, width, tempY);
+    }
+    for(let i = 1; i < this.gridCols; i++) { // Columns
+      let tempX = i / this.gridCols * width;
+      line(tempX, 0, tempX, height);
+    }
+  }
+
+  mouseTile() {
+    // Calculate tile mouse is in
+    void 0;
+    let x = Math.floor(mouseX / (width / this.gridCols));
+    let y = Math.floor(mouseY / (height / this.gridRows));
+    this.mCoord = [x, y];
+
+    // Fill the tile
+    let rectX = x / this.gridCols * width;
+    let rectY = y / this.gridRows * height;
+    if(mouseIsPressed) {
+      fill(20, 100);
+    }
+    else {
+      fill(20, 75);
+    }
+
+    noStroke();
+    rectMode(CORNER);
+    rect(rectX, rectY, this.tileWidth, this.tileHeight);
+  }
+
+  fillTiles() {
+    for(let i = 0; i < this.gridCols; i++) {
+      for(let j = 0; j < this.gridRows; j++) {
+        let rectX = i / this.gridCols * width;
+        let rectY = j / this.gridRows * height;
+        if(this.map[j][i] === 1) {
+          fill(197, 178, 128);
+        }
+        else {
+          fill(34, 139, 34);
+        }
+        rect(rectX, rectY, this.tileWidth, this.tileHeight);
+      }
+    }
   }
 }
