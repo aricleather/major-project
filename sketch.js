@@ -94,7 +94,7 @@ function cookieIncrement() {
 
 // Load content used in game
 let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon; // Images
-let battle1Icon;
+let battle1Icon, heart;
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
@@ -151,6 +151,7 @@ function preload() {
   minigameIcon = loadImage("assets/minigameIcon.png");
   battleIcon = loadImage("assets/battleIcon.png");
   battle1Icon = loadImage("assets/battle1Icon.png");
+  heart = loadImage("assets/heart.png");
 
   // Sounds and fonts
   gameFont = loadFont("assets/gameFont.ttf");
@@ -264,11 +265,6 @@ function initScalarsPositions() {
 function draw() {
   background(102, 153, 204);
   // cursor("assets/cursor.png");
-  textSize(15);
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  text(frameRate().toFixed(0), 20, height - 60);
   if (gameState === 0) {
     menu();
   } 
@@ -315,6 +311,11 @@ function draw() {
     }
   }
 
+  textSize(15);
+  fill(0);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  text(frameRate().toFixed(0), 20, height - 60);
   gMouseToggle.end();
 }
 

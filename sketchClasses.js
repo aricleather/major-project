@@ -2286,6 +2286,26 @@ class Battle {
     // [x, y] coord of mouse in terms of tile
     this.mCoord = [];
 
+    // Player/game data
+    this.health = 100;
+    this.round = 1;
+
+    // Positioning
+    this.positions = {
+      dataRectX: width * 0.03,
+      dataRectY: height * 0.9,
+      dataRectWidth: width * 0.3,
+      dataRectHeight: height * 0.1,
+      healthX: width * 0.04,
+      healthY: height * 0.975,
+      heartX: width * 0.04 + width * 0.02 * 3.6,
+    };
+
+    this.scalars = {
+      healthTSize: width * 0.02,
+      heartSize: width * 0.025,
+    };
+
     // Phase 0
     this.animCreated = false;
   }
@@ -2301,6 +2321,7 @@ class Battle {
       this.fillTiles();
       this.mouseTile();
       this.drawGrid();
+      this.displayData();
     }
   }
 
@@ -2364,4 +2385,24 @@ class Battle {
       }
     }
   }
+
+  displayData() {
+    // Box for data at bottom of screne
+    fill(119, 136, 153, 255);
+    stroke(0);
+    strokeWeight(2);
+    rectMode(CORNER);
+    rect(this.positions.dataRectX, this.positions.dataRectY + 2, this.positions.dataRectWidth, this.positions.dataRectHeight, 7, 7, 0, 0);
+
+    // Text showing how much health player has
+    textAlign(LEFT, CENTER);
+    textSize(this.scalars.healthTSize);
+    fill(0);
+    noStroke();
+    text(str(this.health), this.positions.healthX, this.positions.healthY);
+
+    // Heart next to health
+    image(heart, this.positions.heartX, this.positions.healthY, this.scalars.heartSize, this.scalars.heartSize);
+  }
+
 }
