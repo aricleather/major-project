@@ -2274,7 +2274,7 @@ class Battle {
   constructor(level, name) {
     this.level = level;
     this.name = name;
-    this.battlePhase = 0;
+    this.battlePhase = 1;
     this.map = battleMaps["1"];
 
     // Controls amount of tiles drawn to screen
@@ -2289,25 +2289,37 @@ class Battle {
     // Player/game data
     this.health = 100;
     this.round = 1;
+    this.roundInProgress = false;
+
+    // Enemies
+    this.enemies = [];
 
     // Positioning
     this.positions = {
       dataRectX: width * 0.03,
-      dataRectY: height * 0.9,
+      dataRectY: height * 0.94,
       dataRectWidth: width * 0.3,
-      dataRectHeight: height * 0.1,
+      dataRectHeight: height * 0.06,
+
       healthX: width * 0.04,
       healthY: height * 0.975,
-      heartX: width * 0.04 + width * 0.02 * 3.6,
+
+      roundX: width * 0.04 * 3.5,
+
+      heartX: width * 0.04 * 2.5,
     };
 
     this.scalars = {
-      healthTSize: width * 0.02,
+      dataTSize: width * 0.015,
       heartSize: width * 0.025,
     };
 
     // Phase 0
     this.animCreated = false;
+
+    // Interactive objects
+    this.beginRoundFunc = this.startRound.bind(this);
+    this.beginRoundButton = new Button(width / 2, height * 0.9, width * 0.1, height * 0.075, 0, "Start Round", this.beginRoundFunc, 0);
   }
 
   run() {
@@ -2322,6 +2334,10 @@ class Battle {
       this.mouseTile();
       this.drawGrid();
       this.displayData();
+      this.displayButtons();
+      if(this.roundInProgress) {
+        this.runRound();
+      }
     }
   }
 
@@ -2371,9 +2387,10 @@ class Battle {
   }
 
   fillTiles() {
+    rectMode(CORNER);
     for(let i = 0; i < this.gridCols; i++) {
+      let rectX = i / this.gridCols * width;
       for(let j = 0; j < this.gridRows; j++) {
-        let rectX = i / this.gridCols * width;
         let rectY = j / this.gridRows * height;
         if(this.map[j][i] === 1) {
           fill(197, 178, 128);
@@ -2386,6 +2403,27 @@ class Battle {
     }
   }
 
+  displayButtons() {
+    if(!this.roundInProgress) {
+      this.beginRoundButton.run();
+    }
+  }
+
+  startRound() {
+    this.spawnEnemies();
+    this.roundInProgress = true;
+  }
+
+  spawnEnemies() {
+    if(this.round < 10) {
+      void 0;
+    }
+  }
+
+  runRound() {
+
+  }
+
   displayData() {
     // Box for data at bottom of screne
     fill(119, 136, 153, 255);
@@ -2396,10 +2434,11 @@ class Battle {
 
     // Text showing how much health player has
     textAlign(LEFT, CENTER);
-    textSize(this.scalars.healthTSize);
+    textSize(this.scalars.dataTSize);
     fill(0);
     noStroke();
     text(str(this.health), this.positions.healthX, this.positions.healthY);
+    text("Round: " + str(this.round), this.positions.roundX, this.positions.healthY);
 
     // Heart next to health
     image(heart, this.positions.heartX, this.positions.healthY, this.scalars.heartSize, this.scalars.heartSize);
