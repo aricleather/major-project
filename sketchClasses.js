@@ -2335,6 +2335,7 @@ class Battle {
       this.drawGrid();
       this.displayData();
       this.displayButtons();
+
       if(this.roundInProgress) {
         this.runRound();
       }
@@ -2392,7 +2393,7 @@ class Battle {
       let rectX = i / this.gridCols * width;
       for(let j = 0; j < this.gridRows; j++) {
         let rectY = j / this.gridRows * height;
-        if(this.map[j][i] === 1) {
+        if(this.map.graphic[j][i] === 1) {
           fill(197, 178, 128);
         }
         else {
@@ -2416,12 +2417,15 @@ class Battle {
 
   spawnEnemies() {
     if(this.round < 10) {
-      void 0;
+      this.enemies.push(new BattleEnemy(0, 100, this.tileWidth, "goblin", 1, "right", this.map));
     }
   }
 
   runRound() {
-
+    for(let enemy of this.enemies) {
+      enemy.display();
+      enemy.move();
+    }
   }
 
   displayData() {
@@ -2444,4 +2448,77 @@ class Battle {
     image(heart, this.positions.heartX, this.positions.healthY, this.scalars.heartSize, this.scalars.heartSize);
   }
 
+}
+
+class BattleEnemy {
+  constructor(x, y, size, enemyType, level, startingDirection, map) {
+    this.width = size;
+    this.level = level;
+    this.direction = startingDirection;
+    this.distance = 0;
+    this.gridRows = 20;
+    this.gridCols = 40;
+    this.map = map;
+    this.tile = this.map.startTile;
+    this.x = this.tile[0] / this.gridCols * width;
+    this.y = this.tile[1] / this.gridRows * height;
+
+    if(enemyType === "goblin") {
+      this.type = "goblin";
+      this.imageSet = goblin;
+      this.hitpoints = 20;
+      this.speed = 1;
+    }
+
+    this.height = this.width * this.imageSet[this.direction].height / this.imageSet[this.direction].width;
+  }
+
+  display() {
+    imageMode(CENTER);
+    image(this.imageSet[this.direction], this.x, this.y, this.width, this.height);
+  }
+
+  move() {
+    if(this.direction === "right") {
+      this.x += this.speed;
+    }
+    else if(this.direction === "up") {
+      this.y -= this.speed;
+    }
+    else if(this.direction === "down") {
+      this.y += this.speed;
+    }
+    else if(this.direction === "left") {
+      this.x -= this.speed;
+    }
+    let newTile = this.calcTile();
+    if (newTile[0] !== this.tile[0] || newTile[1] !== this.tile[1]) {
+      this.tile = newTile;
+      this.direction = this.changeDirection();
+      console.log(this.tile);
+    }
+  }
+
+  calcTile() {
+    let x = Math.floor((this.x - this.width / 2) / (width / this.gridCols));
+    let y = Math.floor((this.y + this.width / 2) / (height / this.gridRows));
+    return [x, y];
+  }
+
+  changeDirection() {
+    console.log("fired");
+    if(this.map.direction[this.tile[1]][this.tile[0]] === 2) {
+      return "up";
+    }
+    else if(this.map.direction[this.tile[1]][this.tile[0]] === 3) {
+      return "right";
+    }
+    else if(this.map.direction[this.tile[1]][this.tile[0]] === 4) {
+      return "down";
+    }
+    else if(this.map.direction[this.tile[1]][this.tile[0]] === 5) {
+      return "left";
+    }
+    return this.direction;
+  }
 }
