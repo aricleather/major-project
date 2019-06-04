@@ -2417,7 +2417,12 @@ class Battle {
 
   spawnEnemies() {
     if(this.round < 10) {
-      this.enemies.push(new BattleEnemy(0, 100, this.tileWidth, "goblin", 1, "right", this.map));
+      let spawnFunc1 = function() {
+        this.enemies.push(new BattleEnemy(this.tileWidth, "goblin", 1, "right", this.map));
+      }.bind(this);
+      for(let i = 0; i < 10; i++) {
+        window.setTimeout(spawnFunc1, i * 300);
+      }
     }
   }
 
@@ -2450,8 +2455,15 @@ class Battle {
 
 }
 
+let dMap = new Map();
+dMap.set(2, "up");
+dMap.set(3, "right");
+dMap.set(4, "down");
+dMap.set(5, "left");
+
 class BattleEnemy {
-  constructor(x, y, size, enemyType, level, startingDirection, map) {
+  constructor(size, enemyType, level, startingDirection, map) {
+    // Set up vars
     this.width = size;
     this.level = level;
     this.direction = startingDirection;
@@ -2460,25 +2472,31 @@ class BattleEnemy {
     this.gridCols = 40;
     this.map = map;
     this.tile = this.map.startTile;
-    this.x = this.tile[0] / this.gridCols * width;
-    this.y = this.tile[1] / this.gridRows * height;
 
+    // Set up more vars based on enemy type
     if(enemyType === "goblin") {
       this.type = "goblin";
       this.imageSet = goblin;
       this.hitpoints = 20;
-      this.speed = 1;
+      this.speed = 1.5;
     }
 
+    // Initial positioning, all positioning in this class designed to keep centre of image
+    // in centre of tiles on screen
     this.height = this.width * this.imageSet[this.direction].height / this.imageSet[this.direction].width;
+    this.x = this.tile[0] / this.gridCols * width + this.width / 2;
+    this.y = this.tile[1] / this.gridRows * height + this.width / 2;
   }
 
   display() {
+    // Display the enemy
     imageMode(CENTER);
     image(this.imageSet[this.direction], this.x, this.y, this.width, this.height);
   }
 
   move() {
+    // Moved based on direction and on speed
+    this.distance += this.speed;
     if(this.direction === "right") {
       this.x += this.speed;
     }
@@ -2491,34 +2509,46 @@ class BattleEnemy {
     else if(this.direction === "left") {
       this.x -= this.speed;
     }
-    let newTile = this.calcTile();
-    if (newTile[0] !== this.tile[0] || newTile[1] !== this.tile[1]) {
-      this.tile = newTile;
+
+    // After moving, check if the tile we are on now is different
+    // If it is different, check if we need to change direction
+    let oldTile = this.tile.slice();
+    this.calcTile();
+    if (oldTile[0] !== this.tile[0] || oldTile[1] !== this.tile[1]) {
       this.direction = this.changeDirection();
-      console.log(this.tile);
     }
   }
 
   calcTile() {
-    let x = Math.floor((this.x - this.width / 2) / (width / this.gridCols));
-    let y = Math.floor((this.y + this.width / 2) / (height / this.gridRows));
-    return [x, y];
+    // The formulas used here are the reverse of the other positioning formulas, designed
+    // to extrapolate tile from x or y pos. Need to use "floor" or "ceil" when going different
+    // directions in order to correctly calculate if we have moved fully onto a new tile
+    if(this.direction === "right") {
+      this.tile[0] = Math.floor((this.x - this.width / 2) * this.gridCols / width);
+    }
+    else if(this.direction === "up") {
+      this.tile[1] = Math.ceil((this.y - this.width / 2) * this.gridRows / height);
+    }
+    else if(this.direction === "down") {
+      this.tile[1] = Math.floor((this.y - this.width / 2) * this.gridRows / height);
+    }
+    else if(this.direction === "left") {
+      this.tile[0] = Math.ceil((this.x - this.width / 2) * this.gridCols / width);
+    }
   }
 
   changeDirection() {
-    console.log("fired");
-    if(this.map.direction[this.tile[1]][this.tile[0]] === 2) {
-      return "up";
+    // Check the direction map from the current map to see if we need to change direction
+    // If so, switch this.direction by accessing dMap to see what direction the data is indicating
+    let theDirection = dMap.get(this.map.direction[this.tile[1]][this.tile[0]]);
+    if(theDirection && theDirection !== this.direction) {
+      this.x = this.tile[0] / this.gridCols * width + this.width / 2;
+      this.y = this.tile[1] / this.gridRows * height + this.width / 2;
+      return theDirection;
     }
-    else if(this.map.direction[this.tile[1]][this.tile[0]] === 3) {
-      return "right";
+    else {
+      return this.direction;
     }
-    else if(this.map.direction[this.tile[1]][this.tile[0]] === 4) {
-      return "down";
-    }
-    else if(this.map.direction[this.tile[1]][this.tile[0]] === 5) {
-      return "left";
-    }
-    return this.direction;
+
   }
 }
