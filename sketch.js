@@ -95,7 +95,7 @@ function cookieIncrement() {
 // Load content used in game
 let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon; // Images
 let battle1Icon, heart;
-let goblin;
+let goblin, cookieGun;
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
 let gameFont; // Fonts
 
@@ -161,6 +161,7 @@ function preload() {
     down: loadImage("assets/battle/goblinDown.png"),
     left: loadImage("assets/battle/goblinLeft.png"),
   };
+  cookieGun = loadImage("assets/battle/cookieGun.png");
 
 
   // Sounds and fonts

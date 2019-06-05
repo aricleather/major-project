@@ -2290,6 +2290,7 @@ class Battle {
     this.health = 100;
     this.round = 1;
     this.roundInProgress = false;
+    this.towerLocations = [];
 
     // Enemies
     this.enemies = [];
@@ -2297,9 +2298,14 @@ class Battle {
     // Positioning
     this.positions = {
       dataRectX: width * 0.03,
-      dataRectY: height * 0.94,
+      dataRectY: height * 0.94 + 2,
       dataRectWidth: width * 0.3,
       dataRectHeight: height * 0.06,
+
+      menuRectX: width * 0.6 + 2,
+      menuRectY: height * 0.88 + 2,
+      menuRectWidth: width * 0.4,
+      menuRectHeight: height * 0.12,
 
       healthX: width * 0.04,
       healthY: height * 0.975,
@@ -2312,6 +2318,8 @@ class Battle {
     this.scalars = {
       dataTSize: width * 0.015,
       heartSize: width * 0.025,
+
+      cookieGunScalar: cookieGun.height / cookieGun.width,
     };
 
     // Phase 0
@@ -2320,6 +2328,14 @@ class Battle {
     // Interactive objects
     this.beginRoundFunc = this.startRound.bind(this);
     this.beginRoundButton = new Button(width / 2, height * 0.9, width * 0.1, height * 0.075, 0, "Start Round", this.beginRoundFunc, 0);
+
+    this.purchasedTower = null;
+
+    this.towerImageButtons = [];
+    let cookieGunFunc = function() {
+      this.purchasedTower = "cookieGun";
+    }.bind(this);
+    this.towerImageButtons.push(new ImageButton(width * 0.68, height * 0.92, width * 0.06, width * 0.06 * this.scalars.cookieGunScalar, 0, cookieGun, cookieGunFunc, 1, "Cookie Gun"));
   }
 
   run() {
@@ -2333,8 +2349,22 @@ class Battle {
       this.fillTiles();
       this.mouseTile();
       this.drawGrid();
+      this.drawTowers();
       this.displayData();
+      this.displayMenu();
       this.displayButtons();
+      if(this.purchasedTower) {
+        if(this.purchasedTower === "cookieGun") {
+          image(cookieGun, mouseX, mouseY, 50, 50 * this.scalars.cookieGunScalar);
+          console.log(gMouseToggle.val);
+          if(mouseIsPressed && gMouseToggle.val <= 0) {
+            let theTile = [[this.mCoord[0]], [this.mCoord[1]]];
+            this.towerLocations.push(theTile);
+            this.map.player[theTile[1]][theTile[0]] = new BattleTower(theTile, "cookieGun");
+            this.purchasedTower = null;
+          }
+        }
+      }
 
       if(this.roundInProgress) {
         this.runRound();
@@ -2362,6 +2392,14 @@ class Battle {
     for(let i = 1; i < this.gridCols; i++) { // Columns
       let tempX = i / this.gridCols * width;
       line(tempX, 0, tempX, height);
+    }
+  }
+
+  drawTowers() {
+    for(let coord of this.towerLocations) {
+      if(this.map.player[coord[1]][coord[0]] === "cookieGun") {
+        console.log("draw a cookie gun at: " + coord);
+      }
     }
   }
 
@@ -2410,6 +2448,18 @@ class Battle {
     }
   }
 
+  displayMenu() {
+    rectMode(CORNER);
+    fill(119, 136, 153, 255);
+    stroke(0);
+    strokeWeight(2);
+    rect(this.positions.menuRectX, this.positions.menuRectY, this.positions.menuRectWidth, this.positions.menuRectHeight, 7, 0, 0, 0);
+
+    for(let tower of this.towerImageButtons) {
+      tower.run();
+    }
+  }
+
   startRound() {
     this.spawnEnemies();
     this.roundInProgress = true;
@@ -2418,10 +2468,10 @@ class Battle {
   spawnEnemies() {
     if(this.round < 10) {
       let spawnFunc1 = function() {
-        this.enemies.push(new BattleEnemy(this.tileWidth, "goblin", 1, "right", this.map));
+        this.enemies.push(new BattleEnemy(this.tileWidth * 0.9, "goblin", 1, "right", this.map));
       }.bind(this);
-      for(let i = 0; i < 10; i++) {
-        window.setTimeout(spawnFunc1, i * 300);
+      for(let i = 0; i < 8; i++) {
+        window.setTimeout(spawnFunc1, i * 600);
       }
     }
   }
@@ -2439,7 +2489,7 @@ class Battle {
     stroke(0);
     strokeWeight(2);
     rectMode(CORNER);
-    rect(this.positions.dataRectX, this.positions.dataRectY + 2, this.positions.dataRectWidth, this.positions.dataRectHeight, 7, 7, 0, 0);
+    rect(this.positions.dataRectX, this.positions.dataRectY, this.positions.dataRectWidth, this.positions.dataRectHeight, 7, 7, 0, 0);
 
     // Text showing how much health player has
     textAlign(LEFT, CENTER);
@@ -2471,14 +2521,14 @@ class BattleEnemy {
     this.gridRows = 20;
     this.gridCols = 40;
     this.map = map;
-    this.tile = this.map.startTile;
+    this.tile = this.map.startTile.slice();
 
     // Set up more vars based on enemy type
     if(enemyType === "goblin") {
       this.type = "goblin";
       this.imageSet = goblin;
       this.hitpoints = 20;
-      this.speed = 1.5;
+      this.speed = 2.5;
     }
 
     // Initial positioning, all positioning in this class designed to keep centre of image
@@ -2550,5 +2600,20 @@ class BattleEnemy {
       return this.direction;
     }
 
+  }
+}
+
+class BattleTower {
+  constructor(tile, towerType) {
+    this.gridCols = 40;
+    this.gridRows = 20;
+    this.x = tile[0] / this.gridCols * width + this.width / 2;
+    this.y = tile[1] / this.gridRows * height + this.width / 2;
+    if(towerType === "cookieGun") {
+      this.type = "cookieGun";
+      this.hitSpeed = 500;
+      this.damage = 1;
+      this.image = cookieGun;
+    }
   }
 }
