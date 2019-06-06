@@ -2289,6 +2289,7 @@ class Battle {
     // Player/game data
     this.health = 100;
     this.round = 1;
+    this.money = 100;
     this.roundInProgress = false;
     this.towerLocations = [];
 
@@ -2309,6 +2310,9 @@ class Battle {
 
       healthX: width * 0.04,
       healthY: height * 0.975,
+
+      moneyX: width * 0.96,
+      moneyY: height * 0.86,
 
       roundX: width * 0.04 * 3.5,
 
@@ -2333,9 +2337,12 @@ class Battle {
 
     this.towerImageButtons = [];
     let cookieGunFunc = function() {
-      this.purchasedTower = "cookieGun";
+      if(gMouse <= 0 && this.money >= 65) {
+        this.purchasedTower = "cookieGun";
+        this.money -= 65;
+      }
     }.bind(this);
-    this.towerImageButtons.push(new ImageButton(width * 0.68, height * 0.92, width * 0.06, width * 0.06 * this.scalars.cookieGunScalar, 0, cookieGun, cookieGunFunc, 1, "Cookie Gun"));
+    this.towerImageButtons.push(new ImageButton(width * 0.68, height * 0.92, width * 0.06, width * 0.06 * this.scalars.cookieGunScalar, 1, cookieGun, cookieGunFunc, 1, "Cookie Gun"));
   }
 
   run() {
@@ -2354,20 +2361,29 @@ class Battle {
       this.displayMenu();
       this.displayButtons();
       if(this.purchasedTower) {
-        if(this.purchasedTower === "cookieGun") {
-          image(cookieGun, mouseX, mouseY, 50, 50 * this.scalars.cookieGunScalar);
-          console.log(gMouseToggle.val);
-          if(mouseIsPressed && gMouseToggle.val <= 0) {
-            let theTile = [[this.mCoord[0]], [this.mCoord[1]]];
-            this.towerLocations.push(theTile);
-            this.map.player[theTile[1]][theTile[0]] = new BattleTower(theTile, "cookieGun");
-            this.purchasedTower = null;
-          }
-        }
+        this.purchaseFunc();
       }
 
       if(this.roundInProgress) {
         this.runRound();
+        this.operateTowers();
+      }
+    }
+  }
+
+  purchaseFunc() {
+    gMouseToggle.bound = 1;
+    // If the player has purchased a tower and is holding it, draw it depending on type.
+    // Each if statement for type tells what to do when the tower is placed
+    if(this.purchasedTower === "cookieGun") {
+      image(cookieGun, mouseX, mouseY, 50, 50 * this.scalars.cookieGunScalar);
+      if(mouseIsPressed && gMouse <= 1) {
+        let theTile = [this.mCoord[0], this.mCoord[1]];
+        if(this.map.graphic[theTile[1]][theTile[0]] !== 1) {
+          this.towerLocations.push(theTile);
+          this.map.player[theTile[1]][theTile[0]] = new BattleTower(theTile, "cookieGun", this.tileWidth, this.tileHeight);
+          this.purchasedTower = null;
+        }
       }
     }
   }
@@ -2397,9 +2413,19 @@ class Battle {
 
   drawTowers() {
     for(let coord of this.towerLocations) {
-      if(this.map.player[coord[1]][coord[0]] === "cookieGun") {
-        console.log("draw a cookie gun at: " + coord);
+      let theTile = this.map.player[coord[1]][coord[0]];
+      if(theTile.type === "cookieGun") {
+        theTile.displayRadius();
+        image(theTile.image, theTile.x, theTile.y, this.tileWidth, this.tileHeight * this.scalars.cookieGun);
       }
+    }
+  }
+  
+  operateTowers() {
+    for(let coord of this.towerLocations) {
+      let theTower = this.map.player[coord[1]][coord[0]];
+      theTower.detectNearestEnemy(this.enemies);
+      theTower.attack(this.enemies);
     }
   }
 
@@ -2449,6 +2475,11 @@ class Battle {
   }
 
   displayMenu() {
+    // Display how much money player has
+    textAlign(CENTER, CENTER);
+    text("$" + str(this.money), this.positions.moneyX, this.positions.moneyY);
+
+    // Draw the box for the menu
     rectMode(CORNER);
     fill(119, 136, 153, 255);
     stroke(0);
@@ -2458,6 +2489,7 @@ class Battle {
     for(let tower of this.towerImageButtons) {
       tower.run();
     }
+    text("$65", width * 0.72, height * 0.92);
   }
 
   startRound() {
@@ -2502,7 +2534,12 @@ class Battle {
     // Heart next to health
     image(heart, this.positions.heartX, this.positions.healthY, this.scalars.heartSize, this.scalars.heartSize);
   }
-
+  
+  tileCenterCalc(x, y) {
+    let xPos = x / this.gridCols * width + this.tileWidth / 2;
+    let yPos = y / this.gridRows * height + this.tileHeight / 2;
+    return [xPos, yPos];
+  }
 }
 
 let dMap = new Map();
@@ -2604,16 +2641,56 @@ class BattleEnemy {
 }
 
 class BattleTower {
-  constructor(tile, towerType) {
+  constructor(tile, towerType, tileWidth, tileHeight) {
+    this.tile = tile;
     this.gridCols = 40;
     this.gridRows = 20;
-    this.x = tile[0] / this.gridCols * width + this.width / 2;
-    this.y = tile[1] / this.gridRows * height + this.width / 2;
+    this.x = tile[0] / this.gridCols * width + tileWidth / 2;
+    this.y = tile[1] / this.gridRows * height + tileHeight / 2;
+    
     if(towerType === "cookieGun") {
       this.type = "cookieGun";
       this.hitSpeed = 500;
+      this.cooldown = 0;
       this.damage = 1;
       this.image = cookieGun;
+      this.radius = Math.pow(tileWidth, 2) / tileHeight * 10;
+    }
+  }
+
+  displayRadius() {
+    fill(220, 50);
+    ellipse(this.x, this.y, this.radius);
+  }
+
+  detectNearestEnemy(enemies) {
+    if(millis() > this.cooldown) {
+      // First find all enemies within the radius of the tower
+      let enemiesInRadius = [];
+      for(let i = 0; i < enemies.length; i++) {
+        let distanceFromEnemy = dist(this.x, this.y, enemies[i].x, enemies[i].y);
+        if(distanceFromEnemy <= this.radius / 2) {
+          enemiesInRadius.push(i);
+        }
+      }
+      // Compare the distances of all enemies within radius to determine the one to be shot at
+      let mostDistance = 0;
+      let nearestEnemy = null;
+      for(let enemy of enemiesInRadius) {
+        if (enemies[enemy].distance > mostDistance) {
+          mostDistance = enemies[enemy].distance;
+          nearestEnemy = enemy;
+        }
+      }
+      this.targetedEnemy = nearestEnemy;
+    }
+  }
+
+  attack(enemies) {
+    console.log(millis() > this.cooldown);
+    if(millis() > this.cooldown && this.targetedEnemy) {
+      enemies.splice(this.targetedEnemy, 1);
+      this.cooldown = millis() + this.hitSpeed;
     }
   }
 }
