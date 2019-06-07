@@ -2295,6 +2295,8 @@ class Battle {
 
     // Enemies
     this.enemies = [];
+    this.projectiles = [];
+    this.enemiesDefeated = 0;
 
     // Positioning
     this.positions = {
@@ -2352,11 +2354,14 @@ class Battle {
         this.introAnim();
       }
     }
+
+
     else if(this.battlePhase === 1) {
       this.fillTiles();
       this.mouseTile();
       this.drawGrid();
       this.drawTowers();
+      this.drawProjectiles();
       this.displayData();
       this.displayMenu();
       this.displayButtons();
@@ -2365,6 +2370,9 @@ class Battle {
       }
 
       if(this.roundInProgress) {
+        if(this.enemiesDefeated === 8) {
+          this.endRound();
+        }
         this.runRound();
         this.operateTowers();
       }
@@ -2421,11 +2429,25 @@ class Battle {
     }
   }
   
+  drawProjectiles() {
+    for(let i = 0; i < this.projectiles.length; i++) {
+      this.projectiles[i].run();
+      if(this.projectiles[i].hitEnemy) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+  }
+  
   operateTowers() {
     for(let coord of this.towerLocations) {
+      // For each tower the player has, identify it, let it detect what enemy to target
+      // (if any), and attack it. Then check if it killed an enemy
       let theTower = this.map.player[coord[1]][coord[0]];
       theTower.detectNearestEnemy(this.enemies);
-      theTower.attack(this.enemies);
+      let killCheck = theTower.attack(this.enemies, this.projectiles);
+      if(killCheck === 1) {
+        this.enemiesDefeated++;
+      }
     }
   }
 
@@ -2515,6 +2537,14 @@ class Battle {
     }
   }
 
+  endRound() {
+    this.roundInProgress = false;
+    this.enemies = [];
+    this.enemiesDefeated = 0;
+    this.money += this.round * 100;
+    this.round++;
+  }
+
   displayData() {
     // Box for data at bottom of screne
     fill(119, 136, 153, 255);
@@ -2564,7 +2594,8 @@ class BattleEnemy {
     if(enemyType === "goblin") {
       this.type = "goblin";
       this.imageSet = goblin;
-      this.hitpoints = 20;
+      this.maxHP = 3;
+      this.hitpoints = 3;
       this.speed = 2.5;
     }
 
@@ -2573,12 +2604,36 @@ class BattleEnemy {
     this.height = this.width * this.imageSet[this.direction].height / this.imageSet[this.direction].width;
     this.x = this.tile[0] / this.gridCols * width + this.width / 2;
     this.y = this.tile[1] / this.gridRows * height + this.width / 2;
+    
+    this.positions = {
+      healthBarWidth: 30,
+      healthBarHeight: 7,
+      healthBarX: this.x - 30 / 2,
+      healthBarY: this.y - this.height / 2 - 7 / 2 - 2,
+    };
   }
 
   display() {
     // Display the enemy
     imageMode(CENTER);
     image(this.imageSet[this.direction], this.x, this.y, this.width, this.height);
+
+ 
+    if(this.hitpoints !== this.maxHP) {
+      // HP Bar red filling
+      let hpWidth = this.hitpoints / this.maxHP * this.positions.healthBarWidth;
+      noStroke();
+      fill("red");
+      rect(this.positions.healthBarX, this.positions.healthBarY, hpWidth, this.positions.healthBarHeight);
+
+      // HP Bar outline
+      console.log("Drraw bar");
+      rectMode(CORNER);
+      strokeWeight(1);
+      stroke(0);
+      fill(255, 0);
+      rect(this.positions.healthBarX, this.positions.healthBarY, this.positions.healthBarWidth, this.positions.healthBarHeight);
+    }
   }
 
   move() {
@@ -2586,14 +2641,18 @@ class BattleEnemy {
     this.distance += this.speed;
     if(this.direction === "right") {
       this.x += this.speed;
+      this.positions.healthBarX += this.speed;
     }
     else if(this.direction === "up") {
       this.y -= this.speed;
+      this.positions.healthBarY -= this.speed;
     }
     else if(this.direction === "down") {
       this.y += this.speed;
+      this.positions.healthBarY += this.speed;
     }
     else if(this.direction === "left") {
+      this.positions.healthBarX -= this.speed;
       this.x -= this.speed;
     }
 
@@ -2631,6 +2690,8 @@ class BattleEnemy {
     if(theDirection && theDirection !== this.direction) {
       this.x = this.tile[0] / this.gridCols * width + this.width / 2;
       this.y = this.tile[1] / this.gridRows * height + this.width / 2;
+      this.healthBarX = this.x - 30 / 2;
+      this.healthBarY = this.y - this.height / 2 - 7 / 2 - 2;
       return theDirection;
     }
     else {
@@ -2686,11 +2747,40 @@ class BattleTower {
     }
   }
 
-  attack(enemies) {
-    console.log(millis() > this.cooldown);
-    if(millis() > this.cooldown && this.targetedEnemy) {
-      enemies.splice(this.targetedEnemy, 1);
+  attack(enemies, projectiles) {
+    if(millis() > this.cooldown && this.targetedEnemy !== null) {
+      let projectileFunc = function(damage) {
+        this.hitpoints -= damage;
+      }.bind(enemies[this.targetedEnemy]);
+      projectiles.push(new BattleProjectile(this.x, this.y, 10, enemies[this.targetedEnemy].x, enemies[this.targetedEnemy].y, "cookieBullet", this.damage, projectileFunc));
       this.cooldown = millis() + this.hitSpeed;
+    }
+  }
+}
+
+class BattleProjectile {
+  constructor(x, y, size, destinationX, destinationY, type, damage, func) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.destX = destinationX;
+    this.desty = destinationY;
+    this.damage = damage;
+    this.func = func;
+    if(type === "cookieBullet") {
+      this.type = "cookieBullet";
+      this.speed = 10;
+      this.pImage = projectiles.cookieBullet;
+    }
+
+    this.hitEnemy = false;
+  }
+
+  run() {
+    image(this.pImage, this.x, this.y, this.size, this.size);
+    if(frameCount % 60 === 0) {
+      this.func(this.damage);
+      this.hitEnemy = true;
     }
   }
 }
