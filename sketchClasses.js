@@ -2764,7 +2764,9 @@ class BattleProjectile {
     this.y = y;
     this.size = size;
     this.destX = destinationX;
-    this.desty = destinationY;
+    this.destY = destinationY;
+    this.angle = Math.atan((this.destX - this.x) / (this.destY - this.y));
+
     this.damage = damage;
     this.func = func;
     if(type === "cookieBullet") {
@@ -2772,15 +2774,41 @@ class BattleProjectile {
       this.speed = 10;
       this.pImage = projectiles.cookieBullet;
     }
+    this.dx = this.destY < this.y ? Math.sin(this.angle) * -this.speed : Math.sin(this.angle) * this.speed;
+    this.dy = this.destY < this.y ? Math.cos(this.angle) * -this.speed : Math.cos(this.angle) * this.speed;
+    
 
     this.hitEnemy = false;
   }
 
   run() {
+    console.log(this.angle);
     image(this.pImage, this.x, this.y, this.size, this.size);
-    if(frameCount % 60 === 0) {
-      this.func(this.damage);
-      this.hitEnemy = true;
+    this.x += this.dx;
+    this.y += this.dy;
+
+    if(this.dx < 0 && this.x <= this.destX) { // left
+      if(this.dy > 0 && this.y >= this.destY) { // down
+        this.func(this.damage);
+        this.hitEnemy = true;
+      }
+      else if(this.dy < 0 && this.y <= this.destY) { // up
+        this.func(this.damage);
+        this.hitEnemy = true;
+      }
     }
+    else if(this.x >= this.destX) { // right
+      if(this.dy > 0 && this.y <= this.destY) { // down
+        this.func(this.damage);
+        this.hitEnemy = true;
+      }
+      else if(this.dy < 0 && this.y >= this.destY) { // up
+        this.func(this.damage);
+        this.hitEnemy = true;
+      }
+    }
+
+    this.func(this.damage);
+    this.hitEnemy = true;
   }
 }
