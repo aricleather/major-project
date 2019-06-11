@@ -2276,6 +2276,7 @@ class Battle {
     this.name = name;
     this.battlePhase = 1;
     this.map = battleMaps["1"];
+    this.difficulty = "easy";
 
     // Controls amount of tiles drawn to screen
     this.gridRows = 20;
@@ -2297,6 +2298,7 @@ class Battle {
     this.enemies = [];
     this.projectiles = [];
     this.enemiesDefeated = 0;
+    this.totalEnemyCountThisRound = 0;
 
     // Positioning
     this.positions = {
@@ -2370,10 +2372,10 @@ class Battle {
       }
 
       if(this.roundInProgress) {
-        if(this.enemiesDefeated === 8) {
+        if(this.enemiesDefeated === this.totalEnemyCountThisRound) {
           this.endRound();
         }
-        this.runRound();
+        this.runEnemies();
         this.operateTowers();
       }
     }
@@ -2407,7 +2409,7 @@ class Battle {
 
   drawGrid() {
     // Draw the grid
-    stroke(20);
+    stroke(0, 100);
     strokeWeight(1);
     for(let i = 1; i < this.gridRows; i++) { // Rows
       let tempY = i / this.gridRows * height;
@@ -2516,24 +2518,36 @@ class Battle {
 
   startRound() {
     this.spawnEnemies();
+    this.totalEnemyCountThisRound = battleSpawns[this.difficulty][str(this.round)][0];
     this.roundInProgress = true;
   }
 
   spawnEnemies() {
-    if(this.round < 10) {
-      let spawnFunc1 = function() {
-        this.enemies.push(new BattleEnemy(this.tileWidth * 0.9, "goblin", 1, "right", this.map));
-      }.bind(this);
-      for(let i = 0; i < 8; i++) {
-        window.setTimeout(spawnFunc1, i * 600);
+    let enemiesToSpawn = battleSpawns[this.difficulty][str(this.round)].slice(1);
+    for(let arr of enemiesToSpawn) {
+      if(arr[0] === "goblin") {
+        let spawnFunc = function() {
+          this.enemies.push(new BattleEnemy(this.tileWidth * 0.9, "goblin", 1, "right", this.map));
+        }.bind(this);
+        for(let i = 0; i < arr[2]; i++) {
+          window.setTimeout(spawnFunc, i * arr[3]);
+        }
       }
     }
   }
 
-  runRound() {
-    for(let enemy of this.enemies) {
-      enemy.display();
-      enemy.move();
+  runEnemies() {
+    // Runs backwards through enemy array, first running them enemies then checking if they
+    // are dead. If they are dead, grant correct reward and delete them from array, incrementing enemiesDefeated
+    let count = this.enemies.length - 1;
+    for(let i = count; i >= 0; i--) {
+      this.enemies[i].display();
+      this.enemies[i].move();
+      if(this.enemies[i].dead) {
+        this.money += battleRewardData.killRewards[this.enemies[i].type];
+        this.enemies.splice(i, 1);
+        this.enemiesDefeated++;
+      }
     }
   }
 
@@ -2541,7 +2555,8 @@ class Battle {
     this.roundInProgress = false;
     this.enemies = [];
     this.enemiesDefeated = 0;
-    this.money += this.round * 100;
+    this.totalEnemyCountThisRound = 0;
+    this.money += battleRewardData[this.difficulty][str(this.level)][this.round];
     this.round++;
   }
 
@@ -2589,13 +2604,14 @@ class BattleEnemy {
     this.gridCols = 40;
     this.map = map;
     this.tile = this.map.startTile.slice();
+    this.dead = false;
 
     // Set up more vars based on enemy type
     if(enemyType === "goblin") {
       this.type = "goblin";
       this.imageSet = goblin;
-      this.maxHP = 3;
-      this.hitpoints = 3;
+      this.maxHP = enemyData[this.type][str(this.level)];
+      this.hitpoints = this.maxHP;
       this.speed = 2.5;
     }
 
@@ -2605,6 +2621,7 @@ class BattleEnemy {
     this.x = this.tile[0] / this.gridCols * width + this.width / 2;
     this.y = this.tile[1] / this.gridRows * height + this.width / 2;
     
+    // Figure out where to put the health bar
     this.positions = {
       healthBarWidth: 30,
       healthBarHeight: 7,
@@ -2620,6 +2637,9 @@ class BattleEnemy {
 
  
     if(this.hitpoints !== this.maxHP) {
+      if(this.hitpoints === 0) {
+        this.dead = true;
+      }
       // HP Bar red filling
       let hpWidth = this.hitpoints / this.maxHP * this.positions.healthBarWidth;
       noStroke();
@@ -2627,7 +2647,6 @@ class BattleEnemy {
       rect(this.positions.healthBarX, this.positions.healthBarY, hpWidth, this.positions.healthBarHeight);
 
       // HP Bar outline
-      console.log("Drraw bar");
       rectMode(CORNER);
       strokeWeight(1);
       stroke(0);
@@ -2637,7 +2656,7 @@ class BattleEnemy {
   }
 
   move() {
-    // Moved based on direction and on speed
+    // Moved based on direction and on speed (also moves the health bar by same amount)
     this.distance += this.speed;
     if(this.direction === "right") {
       this.x += this.speed;
@@ -2686,6 +2705,7 @@ class BattleEnemy {
   changeDirection() {
     // Check the direction map from the current map to see if we need to change direction
     // If so, switch this.direction by accessing dMap to see what direction the data is indicating
+    // Also moves health bar
     let theDirection = dMap.get(this.map.direction[this.tile[1]][this.tile[0]]);
     if(theDirection && theDirection !== this.direction) {
       this.x = this.tile[0] / this.gridCols * width + this.width / 2;
@@ -2752,63 +2772,79 @@ class BattleTower {
       let projectileFunc = function(damage) {
         this.hitpoints -= damage;
       }.bind(enemies[this.targetedEnemy]);
-      projectiles.push(new BattleProjectile(this.x, this.y, 10, enemies[this.targetedEnemy].x, enemies[this.targetedEnemy].y, "cookieBullet", this.damage, projectileFunc));
+      projectiles.push(new BattleProjectile(this.x, this.y, 10, enemies[this.targetedEnemy], "cookieBullet", this.damage, projectileFunc));
       this.cooldown = millis() + this.hitSpeed;
     }
   }
 }
 
 class BattleProjectile {
-  constructor(x, y, size, destinationX, destinationY, type, damage, func) {
+  constructor(x, y, size, enemy, type, damage, func) {
+    // Various vars
     this.x = x;
     this.y = y;
     this.size = size;
-    this.destX = destinationX;
-    this.destY = destinationY;
-    this.angle = Math.atan((this.destX - this.x) / (this.destY - this.y));
-
+    this.enemy = enemy;
     this.damage = damage;
     this.func = func;
+    
+    // Based on type, set more vars
     if(type === "cookieBullet") {
       this.type = "cookieBullet";
       this.speed = 10;
       this.pImage = projectiles.cookieBullet;
     }
+
+    // Based on enemy, set angle, speed, etc.
+    this.destX = this.enemy.x;
+    this.destY = this.enemy.y;
+    this.angle = Math.atan((this.destX - this.x) / (this.destY - this.y));
     this.dx = this.destY < this.y ? Math.sin(this.angle) * -this.speed : Math.sin(this.angle) * this.speed;
     this.dy = this.destY < this.y ? Math.cos(this.angle) * -this.speed : Math.cos(this.angle) * this.speed;
     
-
+    // Used to keep track of when enemy was hit. When they are, do damage and despawn projectile
     this.hitEnemy = false;
   }
 
+
   run() {
-    console.log(this.angle);
+    if(frameCount % 5 === 0) {
+      this.reCalculateDest();
+    }
+
     image(this.pImage, this.x, this.y, this.size, this.size);
     this.x += this.dx;
     this.y += this.dy;
 
     if(this.dx < 0 && this.x <= this.destX) { // left
       if(this.dy > 0 && this.y >= this.destY) { // down
-        this.func(this.damage);
-        this.hitEnemy = true;
+        this.doDamage();
       }
       else if(this.dy < 0 && this.y <= this.destY) { // up
-        this.func(this.damage);
-        this.hitEnemy = true;
+        this.doDamage();
       }
     }
-    else if(this.x >= this.destX) { // right
-      if(this.dy > 0 && this.y <= this.destY) { // down
-        this.func(this.damage);
-        this.hitEnemy = true;
+    else if(this.dx > 0 && this.x >= this.destX) { // right
+      if(this.dy > 0 && this.y >= this.destY) { // down
+        this.doDamage();
       }
-      else if(this.dy < 0 && this.y >= this.destY) { // up
-        this.func(this.damage);
-        this.hitEnemy = true;
+      else if(this.dy < 0 && this.y <= this.destY) { // up
+        this.doDamage();
       }
     }
+  }
 
+  doDamage() {
     this.func(this.damage);
     this.hitEnemy = true;
+  }
+
+  reCalculateDest() {
+    this.destX = this.enemy.x;
+    this.destY = this.enemy.y;
+    this.angle = Math.atan((this.destX - this.x) / (this.destY - this.y));
+
+    this.dx = this.destY < this.y ? Math.sin(this.angle) * -this.speed : Math.sin(this.angle) * this.speed;
+    this.dy = this.destY < this.y ? Math.cos(this.angle) * -this.speed : Math.cos(this.angle) * this.speed;
   }
 }

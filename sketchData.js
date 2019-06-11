@@ -138,3 +138,57 @@ let battleMaps = {
     startTile: [0, 7],
   } 
 };
+
+let enemyData = {
+  goblin: {
+    1: 2,
+    2: 3,
+    3: 4,
+    4: 5,
+  },
+};
+
+let battleRewardData = {
+  killRewards: {
+    goblin: 2,
+  },
+  easy: {
+    1: [
+      100, 110, 120, 130, 140, 150, 
+    ],
+    2: [
+      100, 110, 120, 130, 140, 150, 
+    ],
+    3: [
+      100, 110, 120, 130, 140, 150, 
+    ],
+  }
+};
+
+let battleSpawns = {
+  //
+  easy: {
+    1: [
+      5,
+      ["goblin", 1, 5, 400],
+    ],
+    2: [
+      6,
+      ["goblin", 1, 6, 400],
+    ],
+    3: [
+      8,
+      ["goblin", 1, 8, 400],
+    ],
+    4: [
+      11,
+      ["goblin", 1, 11, 400],
+    ]
+  },
+  medium: {
+
+  },
+  hard: {
+
+  },
+};
