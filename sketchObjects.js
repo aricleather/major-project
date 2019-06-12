@@ -72,7 +72,7 @@ function initObjects() {
     });
 
   // Image buttons
-  openShopButton = new ImageButton(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, 0, coin, function() {
+  openShopButton = new ImageButton(width - scalars.storeCoinScalar / 1.5, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar, 0, coin, function() {
     shopState = 1;
   }, 1.05, "Open Shop");
   closeShopButton = new ImageButton(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar, 0, rightArrow, function() {
@@ -84,17 +84,17 @@ function initObjects() {
   closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, 0, leftArrow, function() {
     achievementState = 0;
   }, 1.05, "Close");
-  inventoryOpenButton = new ImageButton(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, inventoryButton, function() {
+  inventoryOpenButton = new ImageButton(width - scalars.inventoryOpenScalar / 1.5, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, inventoryButton, function() {
     let tempId = openWindowIdCounter.val;
     openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
     spawners.playerInventory.call(openWindows.get(tempId));
   }, 1.05, "Items");
-  miniGamesButton = new ImageButton(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
+  miniGamesButton = new ImageButton(width - scalars.inventoryOpenScalar / 1.5, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, minigameIcon, function() {
     let tempId = openWindowIdCounter.val;
     openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.22, 400, 200, tempId, [63, 102, 141, 200], 1, "click"));
     spawners.minigames.call(openWindows.get(tempId));
   }, 1.05, "Minigames");
-  battleButton = new ImageButton(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, battleIcon, function() {
+  battleButton = new ImageButton(width - scalars.inventoryOpenScalar / 1.5, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar, 0, battleIcon, function() {
     startAnimation(animations.blackScrollFull, 0, 0, function() {
       gameState = 3;
     });
@@ -218,13 +218,13 @@ function resizeObjects() {
   mainCookie.resize(width / 2, height / 2, scalars.mainCookieScalar, scalars.mainCookieScalar);
 
   // Image buttons
-  openShopButton.resize(width * 0.97, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar);
+  openShopButton.resize(width - scalars.storeCoinScalar / 1.5, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar);
   closeShopButton.resize(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar);
   openAchievementsButton.resize(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
   closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
-  inventoryOpenButton.resize(width * 0.97, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
-  miniGamesButton.resize(width * 0.97, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
-  battleButton.resize(width * 0.97, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  inventoryOpenButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  miniGamesButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  battleButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);

@@ -269,11 +269,11 @@ function initScalarsPositions() {
     // Image based:
     mainCookieScalar: width * 0.15,
     titleScreenCookie: width * 0.06,
-    storeCoinScalar: width * 0.05,
+    storeCoinScalar: 96 * Math.sqrt(width / 1920),
     storeCloseScalar: width * 0.05,
     openAchievementsScalar: width * 0.05,
     closeAchievementsScalar: width * 0.05,
-    inventoryOpenScalar: width * 0.05,
+    inventoryOpenScalar: 96 * Math.sqrt(width / 1920),
     cookieGetScalar: width * 0.025,
     fallingCookieScalar: 50,
   
