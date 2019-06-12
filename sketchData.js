@@ -145,12 +145,21 @@ let enemyData = {
     2: 3,
     3: 4,
     4: 5,
+    5: 6,
   },
+  giant: {
+    1: 6,
+    2: 8,
+    3: 10,
+    4: 12,
+    5: 15,
+  }
 };
 
 let battleRewardData = {
   killRewards: {
-    goblin: 2,
+    goblin: [2, 2, 3, 3, 4],
+
   },
   easy: {
     1: [
@@ -173,17 +182,22 @@ let battleSpawns = {
       ["goblin", 1, 5, 400],
     ],
     2: [
-      6,
-      ["goblin", 1, 6, 400],
-    ],
-    3: [
       8,
       ["goblin", 1, 8, 400],
     ],
+    3: [
+      10,
+      ["goblin", 1, 10, 400],
+    ],
     4: [
-      11,
-      ["goblin", 1, 11, 400],
-    ]
+      13,
+      ["goblin", 1, 13, 400],
+    ],
+    5: [
+      16,
+      ["goblin", 1, 16, 400],
+      ["giant", 1, 2, 1000],
+    ],
   },
   medium: {
 

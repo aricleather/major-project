@@ -18,7 +18,7 @@ class GameObject {
     };
   }
 }
-  
+
 class Button extends GameObject {
   constructor(x, y, width, height, priority, buttonText, clicked = 0, rgb = 0) {
     super(x, y, width, height);
@@ -37,7 +37,7 @@ class Button extends GameObject {
     this.hoverRgb = rgb ? lerpColor(color(this.rgb), color([0, 0, 0]), 0.1) : [80, 80, 80];
     this.hoverOverride = false;
   }
-  
+
   run() {
     // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
     // a shade of gray dependent on whether the mouse is inside or not, then the text inside
@@ -2523,15 +2523,19 @@ class Battle {
   }
 
   spawnEnemies() {
+    // Look up the enemies to spawn for the round number based on difficulty
     let enemiesToSpawn = battleSpawns[this.difficulty][str(this.round)].slice(1);
+    // For each arr in enemiesToSpawn, basically each enemy type, spawn that type
+    // with correct number, level, and interval between spawnings specified by data
     for(let arr of enemiesToSpawn) {
-      if(arr[0] === "goblin") {
-        let spawnFunc = function() {
-          this.enemies.push(new BattleEnemy(this.tileWidth * 0.9, "goblin", 1, "right", this.map));
-        }.bind(this);
-        for(let i = 0; i < arr[2]; i++) {
-          window.setTimeout(spawnFunc, i * arr[3]);
-        }
+      let spawnFunc = function(level, type) {
+        this.enemies.push(new BattleEnemy(this.tileWidth * 0.8, type, level, "right", this.map));
+      }.bind(this);
+      for(let i = 0; i < arr[2]; i++) {
+        let levelToPass = arr[1];
+        let typeToPass = arr[0];
+        window.setTimeout(spawnFunc, i * arr[3], levelToPass, typeToPass);
+
       }
     }
   }
@@ -2544,7 +2548,7 @@ class Battle {
       this.enemies[i].display();
       this.enemies[i].move();
       if(this.enemies[i].dead) {
-        this.money += battleRewardData.killRewards[this.enemies[i].type];
+        this.money += battleRewardData.killRewards[this.enemies[i].type][this.enemies[i].level - 1];
         this.enemies.splice(i, 1);
         this.enemiesDefeated++;
       }
@@ -2610,10 +2614,16 @@ class BattleEnemy {
     if(enemyType === "goblin") {
       this.type = "goblin";
       this.imageSet = goblin;
-      this.maxHP = enemyData[this.type][str(this.level)];
-      this.hitpoints = this.maxHP;
       this.speed = 2.5;
     }
+    if(enemyType === "giant") {
+      this.type = "giant";
+      this.imageSet = giant;
+      this.speed = 4;
+    }
+
+    this.maxHP = enemyData[this.type][str(this.level)];
+    this.hitpoints = this.maxHP;
 
     // Initial positioning, all positioning in this class designed to keep centre of image
     // in centre of tiles on screen
@@ -2635,7 +2645,6 @@ class BattleEnemy {
     imageMode(CENTER);
     image(this.imageSet[this.direction], this.x, this.y, this.width, this.height);
 
- 
     if(this.hitpoints !== this.maxHP) {
       if(this.hitpoints === 0) {
         this.dead = true;
@@ -2735,7 +2744,7 @@ class BattleTower {
       this.cooldown = 0;
       this.damage = 1;
       this.image = cookieGun;
-      this.radius = Math.pow(tileWidth, 2) / tileHeight * 10;
+      this.radius = tileWidth * 7;
     }
   }
 
