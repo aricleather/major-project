@@ -20,6 +20,16 @@ let playerExpToNextLevel = [10, 20, 40, 80];
 let currentInv = null;
 let openWindows = new Map();
 
+let mobile = false;
+function isMobileDevice() {
+  if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
 let saveFile;
 let gMouseToggle = {
   _val: 0,
@@ -188,6 +198,7 @@ function preload() {
 }
 
 function setup() {
+  mobile = isMobileDevice();
   createCanvas(windowWidth, windowHeight);
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
@@ -284,6 +295,16 @@ function initScalarsPositions() {
 
 function draw() {
   background(102, 153, 204);
+  if(!mobile) {
+    drawDesktop();
+  }
+  else {
+    drawMobile();
+  }
+}
+
+function drawDesktop() {
+  // The draw loop for the game meant to be run on desktop
   // cursor("assets/cursor.png");
   if (gameState === 0) {
     menu();
@@ -352,7 +373,7 @@ function menu() { // gameState 0
   }
 
   textSize(15);
-  text("Version 0.1", width * 0.93, height * 0.97);
+  text(mobile, width * 0.93, height * 0.97);
   // If save file was stored as cookie in browser, show load option
 }
 
