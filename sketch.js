@@ -806,9 +806,15 @@ function mouseWheel(event) {
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-  initScalarsPositions();
-  resizeObjects();
+  if(!mobile) {
+    resizeCanvas(windowWidth, windowHeight);
+    initScalarsPositions();
+    resizeObjects();
+  }
+  else {
+    resizeCanvas(displayWidth, windowHeight);
+    initMobileScalarsPositions();
+  }
 }
 
 function spawnItem(itemToSpawn, levelOfItem = 2) {

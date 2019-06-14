@@ -34,6 +34,7 @@ class ButtonMobile extends GameObjectMobile {
   }
 
   run() {
+    console.log(this.touched);
     // When a Button is run, calculate if mouse is on top, draw the rectangle around it, fill it in with
     // a shade of gray dependent on whether the mouse is inside or not, then the text inside
     this.calcTouch();
@@ -66,9 +67,10 @@ class ButtonMobile extends GameObjectMobile {
   }
 
   checkTouched() {
-    if(this.touched && singleTouch) {
+    if(this.touched && singleTouch && !touchBlock) {
       this.touchFunc();
       this.alreadyTouched = 1;
+      touchBlock = true;
     }
   }
   
@@ -106,7 +108,7 @@ class ImageObjectMobile extends GameObjectMobile {
     image(this.objImage, this.x, this.y, this.width, this.height);
   
     // Again, utilizing calcMouse() and this.alreadyClicked to run this.clicked() on click only *once*
-    if(this.touched && singleTouch) {
+    if(this.touched && singleTouch && !touchBlock) {
       this.touchFunc();
     }
   }
@@ -116,5 +118,148 @@ class ImageObjectMobile extends GameObjectMobile {
     this.y = y;
     this.width = width;
     this.height = height;
+  }
+}
+
+class TabButtonMobile extends GameObjectMobile {
+  constructor(x, y, width, height, touchFunc, rgb, buttonText) {
+    super(x, y, width, height);
+    this.touchFunc = touchFunc;
+    this.rgb = rgb;
+    this.hoverRgb = lerpColor(color(this.rgb), color([0, 0, 0]), 0.1);
+    this.buttonText = buttonText;
+    this.tSize = this.width / 15;
+  }
+
+  run() {
+    this.calcTouch();
+
+    if(this.touched) {
+      fill(this.hoverRgb);
+      if(singleTouch && !touchBlock) {
+        this.touchFunc();
+        touchBlock = true;
+      }
+    }
+    else {
+      fill(this.rgb);
+    }
+
+    stroke(255);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.width, this.height, 0, 0, 10, 10);
+
+    textAlign(CENTER, CENTER);
+    textSize(this.tSize);
+    fill(255);
+    noStroke();
+    text(this.buttonText, this.x, this.y);
+  }
+}
+
+class ShopObjectMobile extends GameObjectMobile {
+  constructor(imageWidth, imageHeight, objImage, name, metaText, price, cps) {
+    // Used to construct an object in the shop
+    super(width * 0.25, height * 0.9 * (2 * shopNumber + 1) / 6 + height * 0.1, width * 0.001 * imageWidth, width * 0.001 * imageHeight);
+  
+    // Vars
+    this.objImage = objImage;
+    this.name = name;
+    this.metaText = metaText;
+    this.basePrice = price;
+    this.price = price;
+    this.cps = cps;
+  
+    this.position = shopNumber;
+    this.owned = 0;
+  
+    this.textX = width * 0.5;
+    this.tSize = 10;
+
+    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.cps) + " CPS\nOwned: " + str(this.owned);
+  
+    // shopNumber just keeps track of order in the shop, so that the next shopObject construction knows it comes after
+    shopNumber++;
+  }
+  
+  // The clicked() function here checks if you have enough money then does stuff if you do
+  touchFunc() {
+    if(cookies >= this.price) {
+      autoCookies += this.cps;
+      cookies -= this.price;
+      purchaseSound.play();
+      this.owned++;
+      this.price = Math.ceil(this.basePrice * Math.pow(Math.E, this.owned / 4));
+      this.updateText();
+    }
+    else{
+      // If unable to play, play a little noise
+      errorSound.play();
+    }
+  }
+  
+  // The extendRun for ShopObject draws the rectangle behind the ShopObject and it's text
+  // Then, it sets a tint value for when the image is drawn (in ImageObjects run()) based on whether
+  // or not the player has enough cookies. If mouse hovering, call metaTextBox
+  run() {
+    this.calcTouch();
+      
+    // Darken image if player cannot afford item
+    if(cookies < this.price) {
+      tint(50);
+    }
+    else {
+      tint(255);
+    }
+    fill(0, 255);
+    imageMode(CENTER);
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
+    // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+    if(this.touched && !touchBlock) {
+      if(singleTouch) {
+        this.touchFunc();
+        gMouseToggle.val = 1;
+      }
+    }
+  
+    noStroke();
+    textAlign(LEFT, CENTER);
+    fill(0);
+    textSize(this.tSize);
+    text(this.text, this.textX, this.y);
+  }
+  
+  // Updates the text drawn by this object when called to match current data. Run once on construction and once on purchase
+  updateText() {
+    this.text = this.name + "\nCost: " + str(this.price) + " Cookies\n" + str(this.cps) + " CPS\nOwned: " + str(this.owned);
+  }
+  
+  // Since shopObjects are always in the same relative spot on the screen, resize should be called with no params
+  // to let this extendResize function reset the scaling and position variables
+  resize() {
+    this.scrollPosition = width * 0.0625;
+    this.x = width * 0.76;
+    this.y = height * (2 * this.position + 1) * 0.125 - this.scrollPosition * this.scrollAmount;
+    this.width = width * this.objImage.width * 0.0002;
+    this.height = width * this.objImage.height * 0.0002;
+    this.textX = width * 0.825;
+    this.tSize = 15 * scalars.textScalar;
+    this.rectX = width * 0.85;
+  }
+  
+  // mouseHover() is run in run() if it exists. Here it uses function displayTextBox() to
+  // display the little box over the item with some info
+
+  saveLoad(arr) {
+    this.price = int(arr[0]);
+    this.owned = int(arr[1]);
+    this.updateText();
+  }
+
+  reset() {
+    this.price = this.basePrice;
+    this.owned = 0;
+    this.updateText();
   }
 }
