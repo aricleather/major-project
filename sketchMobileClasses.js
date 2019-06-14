@@ -15,14 +15,13 @@ class GameObjectMobile {
   }
 }
 
-class ButtonMobile extends GameObject {
-  constructor(x, y, width, height, priority, buttonText, clicked = 0, rgb = 0) {
+class ButtonMobile extends GameObjectMobile {
+  constructor(x, y, width, height, buttonText, touchFunc = 0, rgb = 0) {
     super(x, y, width, height);
     // Vars
-    this.priority = priority;
     this.tSize = this.width / 10;
-    this.buttonText = formatText(buttonText, this.width, this.tSize);
-    this.clicked = clicked ? clicked :
+    this.buttonText = buttonText;
+    this.touchFunc = touchFunc ? touchFunc :
       function(){
         void 0;
       };
@@ -60,18 +59,16 @@ class ButtonMobile extends GameObject {
     text(this.buttonText, this.x, this.y);
   
     this.alreadyTouched = false;
-    this.checkClicked();
+    this.checkTouched();
 
     return this.alreadyTouched;
       
   }
 
-  checkClicked() {
-    if(this.touched) {
-      this.clicked();
-      this.alreadyClicked = 1;
-      // After a click, set gMouseToggle to true temporarily to block further clicks until mouse button released
-      gMouseToggle.val = this.priority + 1;
+  checkTouched() {
+    if(this.touched && singleTouch) {
+      this.touchFunc();
+      this.alreadyTouched = 1;
     }
   }
   
@@ -82,5 +79,42 @@ class ButtonMobile extends GameObject {
     this.height = height;
     this.tSize = this.width / 10;
     this.text = formatText(this.buttonText, this.width, this.tSize);
+  }
+}
+
+class ImageObjectMobile extends GameObjectMobile {
+  constructor(x, y, width, height, objImage, touchFunc, extendRun = 0) {
+    super(x, y, width, height);
+    // Vars
+    this.objImage = objImage;
+    this.touchFunc = touchFunc;
+    this.extendRun = extendRun;
+  }
+  
+  run() {
+    // Image objects when run() draw their image to the screen with specified x, y, width, height
+    this.calcTouch();
+    tint(255, 255);
+    fill(0, 255);
+  
+    // If ImageObject has extendRun function (passed during construction), run it here before drawing image
+    // Used in classes that want images to have more functionality (ex. ImageButton)
+    if(this.extendRun) {
+      this.extendRun();
+    }
+    imageMode(CENTER);
+    image(this.objImage, this.x, this.y, this.width, this.height);
+  
+    // Again, utilizing calcMouse() and this.alreadyClicked to run this.clicked() on click only *once*
+    if(this.touched && singleTouch) {
+      this.touchFunc();
+    }
+  }
+      
+  resize(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
   }
 }

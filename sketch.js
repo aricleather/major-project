@@ -199,18 +199,35 @@ function preload() {
 
 function setup() {
   mobile = isMobileDevice();
-  createCanvas(windowWidth, windowHeight);
+  if(!mobile) {
+    createCanvas(windowWidth, windowHeight);
+  }
+  else {
+    createCanvas(displayWidth, windowHeight);
+  }
+
   textFont(gameFont); // Font used throughout whole game
   imageMode(CENTER);
-  initScalarsPositions();
-  initObjects();
+
+  if(!mobile) {
+    initScalarsPositions();
+    initObjects();
+    loadSaveFile();
+
+    if(window.localStorage.length === 0) {
+      console.log("do intro");
+    }
+  }
 
   angleMode(DEGREES);
-  loadSaveFile();
-  if(window.localStorage.length === 0) {
-    console.log("do intro");
+  
+  if(!mobile) {
+    initAchievements();
   }
-  initAchievements();
+  else if(mobile) {
+    initMobileScalarsPositions();
+    initMobileObjects();
+  }
 
   coinSound.setVolume(0.08);
   popSound.setVolume(0.15);
