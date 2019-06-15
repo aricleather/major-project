@@ -295,18 +295,19 @@ function initScalarsPositions() {
     menuButtonH: height * 0.08,
   
     // Image based:
-    mainCookieScalar: width * 0.15,
+    mainCookieScalar: 288 * Math.sqrt(width / 1920),
     titleScreenCookie: width * 0.06,
     storeCoinScalar: 96 * Math.sqrt(width / 1920),
     storeCloseScalar: width * 0.05,
-    openAchievementsScalar: width * 0.05,
-    closeAchievementsScalar: width * 0.05,
+    openAchievementsScalar: 96 * Math.sqrt(width / 1920),
+    closeAchievementsScalar: 96 * Math.sqrt(width / 1920),
     inventoryOpenScalar: 96 * Math.sqrt(width / 1920),
     cookieGetScalar: width * 0.025,
     fallingCookieScalar: 50,
   
     // Text based:
     textScalar: width / 1920,
+    mainCookieTextScalar: 40 * Math.sqrt(width / 1920),
   };
 }
 
@@ -433,7 +434,7 @@ function displayGame() {
   // Draws cookie amount text to screen
   noStroke();
   textFont(gameFont);
-  textSize(40 * scalars.textScalar);
+  textSize(scalars.mainCookieTextScalar);
   textAlign(CENTER, CENTER);
   text(str(Math.floor(cookies)) + " Cookies" , width / 2, height * 0.85);
 
@@ -807,6 +808,11 @@ function mouseWheel(event) {
 
 function windowResized() {
   if(!mobile) {
+    // console.log("Resize not called: ", windowWidth, windowHeight);
+    // console.log(width, height);
+    for(let [key, aWindow] of openWindows) {
+      aWindow.cnvResize(width, height, windowWidth, windowHeight);
+    }
     resizeCanvas(windowWidth, windowHeight);
     initScalarsPositions();
     resizeObjects();

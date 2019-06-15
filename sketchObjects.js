@@ -78,7 +78,7 @@ function initObjects() {
   closeShopButton = new ImageButton(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar, 0, rightArrow, function() {
     shopState = 0;
   }, 1.05, "Close Shop");
-  openAchievementsButton = new ImageButton(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar, 0, goldStar, function() {
+  openAchievementsButton = new ImageButton(scalars.openAchievementsScalar / 1.5, height * 0.115, scalars.openAchievementsScalar, scalars.openAchievementsScalar, 0, goldStar, function() {
     achievementState = 1;
   }, 1.05, "");
   closeAchievementsButton = new ImageButton(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar, 0, leftArrow, function() {
@@ -220,7 +220,7 @@ function resizeObjects() {
   // Image buttons
   openShopButton.resize(width - scalars.storeCoinScalar / 1.5, height * 0.105, scalars.storeCoinScalar, scalars.storeCoinScalar);
   closeShopButton.resize(width * 0.67, height * 0.105, scalars.storeCloseScalar, scalars.storeCloseScalar);
-  openAchievementsButton.resize(width * 0.03, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
+  openAchievementsButton.resize(scalars.openAchievementsScalar / 1.5, height * 0.105, scalars.openAchievementsScalar, scalars.openAchievementsScalar);
   closeAchievementsButton.resize(width * 0.33, height * 0.105, scalars.closeAchievementsScalar, scalars.closeAchievementsScalar);
   inventoryOpenButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
   miniGamesButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
@@ -231,6 +231,7 @@ function resizeObjects() {
   titleOptionsButton.resize(width / 2, height * 0.62, scalars.menuButtonW, scalars.menuButtonH);
   titleLoadButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);
   optionsDeleteDataButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH * 1.5);
+  battleBackButton.resize(width * 0.9, height * 0.9, scalars.menuButtonW, scalars.menuButtonH);
 
   // Shop objects get resized with no params, taken care of by their resize function
   ovenObj.resize();
@@ -258,6 +259,9 @@ function resizeObjects() {
   // Exp bars
   playerExpBar.resize(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02);
 
-  // playerInventory.resize(width / 2, height * 0.22, 400);
+  // Battle menu objects
+  for(let battleMenuObject of battleMenuObjects) {
+    battleMenuObject.resize();
+  }
 }
 

@@ -559,6 +559,7 @@ class BattleMenuObject extends GameObject  {
     this.battleText = battleText;
     this.name = name;
     this.level = battleMenuNumber + 1;
+    this.position = battleMenuNumber;
 
     battleMenuNumber++;
 
@@ -582,6 +583,20 @@ class BattleMenuObject extends GameObject  {
     textSize(this.tSize);
     textAlign(CENTER, TOP);
     text(this.battleText, this.x, this.textY);
+  }
+
+  resize() {
+    this.x = width * (2 * this.position + 1) / 6;
+    this.y = height / 2;
+    this.width = width / 6;
+    this.height = height / 2;
+
+    this.imageWidth = width / 5;
+    this.imageHeight = width / 5 * this.battleImage.width / this.battleImage.height;
+    this.tSize = this.width / 10;
+    this.textY = this.y + this.imageHeight / 2;
+
+    this.battleButton.resize(this.x, this.y, this.imageWidth, this.imageHeight);
   }
 }
 
@@ -995,6 +1010,10 @@ class BackgroundBox extends GameObject {
     this.mode = mode;
     this.contentToRun = [];
     this.parent = parent || 0;
+
+    // For resizing canvas
+    this.originalWidth = width;
+    this.originalHeight = height;
   }
 
   run() {
@@ -1073,6 +1092,21 @@ class BackgroundBox extends GameObject {
     this.y = y || this.y;
     this.width = width || this.width;
     this.height = height || this.height;
+    this.originalWidth = width || this.width;
+    this.originalHeight = height || this.height;
+  }
+
+  cnvResize(oldWidth, oldHeight, newWidth, newHeight) {
+    let relativeX = this.x / oldWidth;
+    let relativeY = this.y / oldHeight;
+    this.x = newWidth * relativeX;
+    this.y = newHeight * relativeY;
+    this.width = this.originalWidth * sqrt(newWidth / 1920);
+    this.height = this.originalHeight * sqrt(newHeight / 1080);
+
+    for(let content of this.contentToRun) {
+      content.resize(this.x, this.y, this.width, this.height);
+    }
   }
 }
 
@@ -1214,6 +1248,7 @@ class InventoryScreen extends GameObject {
     this.y = y;
     this.width = width;
     this.height = width / this.cols * this.rows;
+    openWindows.get(this.id).height = this.height;
 
     this.leftX = this.x - this.width / 2;
     this.rightX = this.x + this.width / 2;
@@ -1338,7 +1373,7 @@ class UpgradeMenu extends GameObject {
       "New Damage", this.upgItem.stats.damage, 0, 0, [79, 128, 176], false);
     this.displayDurability = new NumberCounter(this.counterXRight, this.displayPriceY, this.counterWidth, this.counterHeight, "Max Dura.",
       weaponUpgradeData[this.upgItem.id].durability[str(this.upgItem.weaponLevel)], 0, 0, [79, 128, 176], false);
-    this.upgradeButton = new Button(this.buttonX, this.buttonY, 125, 30, priority, "Upgrade!", 0, [76, 187, 23]);
+    this.upgradeButton = new Button(this.buttonX, this.buttonY, this.width * 0.3, this.height * 0.2, priority, "Upgrade!", 0, [76, 187, 23]);
 
     this.close = false;
   }
@@ -1396,6 +1431,32 @@ class UpgradeMenu extends GameObject {
     this.close = true;
   }
 
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Resize the window space
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    // Resize everything needed for object placement
+    this.counterXLeft = this.x;
+    this.counterXRight = this.x + this.width / 3;
+    this.buttonX = this.x + this.width / 6;
+    this.buttonY = this.y + this.height * 0.35;
+    this.counterWidth = this.width * 0.26;
+    this.counterHeight = this.height / 6;
+    this.levelsToUpgradeCounterY = this.y - this.height * 0.35;
+    this.displayPriceY = this.y;
+    this.imageX = this.x - this.width / 3;
+    this.imageSize = this.width / 6;
+
+    // Resize objects
+    this.levelsToUpgradeCounter.resize(this.counterXLeft, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight);
+    this.displayPrice.resize(this.counterXLeft, this.displayPriceY, this.counterWidth, this.counterHeight);
+    this.displayDamage.resize(this.counterXRight, this.levelsToUpgradeCounterY, this.counterWidth, this.counterHeight);
+    this.displayDurability.resize(this.counterXRight, this.displayPriceY, this.counterWidth, this.counterHeight);
+    this.upgradeButton.resize(this.buttonX, this.buttonY, this.width * 0.3, this.height * 0.2);
+  }
 
 }
 
@@ -1406,7 +1467,7 @@ class ItemInfoMenu extends GameObject {
     this.item = theItem;
     this.priority = priority;
   
-    // Positioning and scaling of elements in upgrade menu
+    // Positioning and scaling of elements in info menu
     this.counterWidth = this.width * 0.4;
     this.counterHeight = this.height / 6;
 
@@ -1447,6 +1508,33 @@ class ItemInfoMenu extends GameObject {
     else {
       this.close = true;
     }
+  }
+
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Resize area
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    // Recalculate all vars for positioning
+    this.counterWidth = this.width * 0.4;
+    this.counterHeight = this.height / 6;
+
+    this.counterX = this.x + this.width / 5;
+    this.damageDisplayY = this.y - this.height * 0.35;
+    this.typeDisplayY = this.y - this.height * 0.05;
+    this.durabilityDisplayY = this.y + this.height * 0.25;
+    this.somethingDisplayY = this.y + this.height * 0.35;
+    this.imageX = this.x - this.width / 4;
+    this.imageSize = this.width / 4;
+    this.tSize = this.imageSize / 7;
+    this.textY = this.y + this.imageSize / 2 + this.tSize;
+
+    // Resize objects
+    this.damageDisplay.resize(this.counterX, this.damageDisplayY, this.counterWidth, this.counterHeight);
+    this.typeDisplay.resize(this.counterX, this.typeDisplayY, this.counterWidth, this.counterHeight);
+    this.durabilityDisplay.resize(this.counterX, this.durabilityDisplayY, this.counterWidth, this.counterHeight);
   }
 }
 
@@ -1534,6 +1622,21 @@ class NumberCounter extends GameObject {
       this.val += inc;
     }
   }
+
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Resize size of box
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    // Recalculate positioning vars
+    this.numberTSize = this.width / 10;
+    this.counterTSize = this.height / 2;
+    this.textY = this.y + this.height * 0.5 + this.numberTSize;
+    this.leftX = this.x - this.width / 4;
+    this.rightX = this.x + this.width / 4;
+  }
 }
 
 class MemoryPuzzle extends GameObject {
@@ -1603,6 +1706,34 @@ class MemoryPuzzle extends GameObject {
       }
     }
 
+  }
+
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Resize size of box
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.width = this.height > this.width ? this.width : this.height;
+    this.height = height || this.height;
+
+    // Formatting and positioning stuff
+    this.cardSize = this.height / 5.5;
+    this.cardSizeWithGap = this.cardSize * 1.1;
+    this.cardToFlip = 0;
+    this.tSizeTop = this.width / 11;
+    this.tSizeCard = this.cardSize * 0.75;
+
+    this.titleText = formatText("Win 100 cookies for winning!", this.width, this.tSizeTop / 1.5);
+
+    this.topYCard = this.y - this.height * 0.41;
+    this.topYText = this.y - this.height * 0.42;
+    this.bottomYText = this.y + this.height * 0.35;
+    this.leftX = this.x - this.width / 2;
+    this.mouseXOffset = this.leftX;
+    this.mouseYOffset = this.topYCard + this.height / 10;
+
+    // Objects resize
+    this.startGameButton.resize(this.x, this.y, this.width * 0.4, this.width * 0.2);
   }
 
   run() {
@@ -1872,6 +2003,37 @@ class RhythmGame extends GameObject {
     this.interval_id;
     this.eventlistener1_id;
     this.eventlistener2_id;
+  }
+
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Resize size of box
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    // Formatting and positioning of non-game elements
+    this.tSizeTop = this.width / 20;
+    this.tSizeBottom = this.width / 50;
+    this.topY = this.y - this.height / 2;
+    this.topYText = this.y - this.height * 0.42;
+    this.bottomYText = this.y + this.height * 0.3;
+
+    // Formatting and positioning of game elements
+    this.beatsToDisplay = 8;
+    this.trackBarWidth = this.width * 0.1;
+    this.trackBarTopY = this.y - this.height * 0.45;
+    this.trackBarBottomY = this.y + this.height * 0.45;    
+    this.trackBarHeight = this.trackBarBottomY - this.trackBarTopY;
+    this.trackBarCellHeight = this.height * 1 / 9;
+    this.trackBarPositioning = [this.x - this.trackBarWidth * 3, this.x - this.trackBarWidth * 2, this.x - this.trackBarWidth, this.x, this.x + this.trackBarWidth];
+    this.trackBarInputY = this.trackBarTopY + this.trackBarHeight - this.trackBarCellHeight;
+
+    // Resize objects
+    this.startGameButton.resize(this.x, this.y, this.width / 4, this.width / 8);
+    this.songButtons[0].resize(this.x, this.y - this.height * 0.1, this.width / 4, this.width / 12);
+    this.songButtons[1].resize(this.x, this.y + this.height * 0.1, this.width / 4, this.width / 12);
+    this.songButtons[2].resize(this.x, this.y + this.height * 0.3, this.width / 4, this.width / 12);
   }
 
   run() {
