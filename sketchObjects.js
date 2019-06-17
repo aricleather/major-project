@@ -2,6 +2,7 @@
 
 // Global button declarations
 let titleStartButton, titleOptionsButton;
+let mainMenuHelpButton;
 
 // Global image object, image button and image spinner declarations
 let mainCookie;
@@ -99,7 +100,13 @@ function initObjects() {
       gameState = 3;
     });
   }, 1.05, "Battle!");
-
+  mainMenuHelpButton = new ImageButton(width - scalars.inventoryOpenScalar / 1.5, height * 0.9, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar,
+    0, help, function() {
+      let tempId = openWindowIdCounter.val;
+      openWindows.set(tempId, new BackgroundBox(width / 2, height * 0.36, width * 0.3125, height / 2, tempId, [63, 102, 141, 200], 1, "click"));
+      spawners.mainMenuHelp.call(openWindows.get(tempId));
+    }, 1.05, "Help");
+ 
   // Tab buttons
   autoCookiesTab = new TabButton(width * 0.775, height * 0.975, width * 0.15, height * 0.05, function() {
     shopTab = 1;
@@ -208,6 +215,11 @@ function initObjects() {
       this.contentToRun.push(new ItemInfoMenu(this.x, this.y, this.width, this.height, this.priority, 
         this.parent.itemArr[this.parent.clickedItemCoords[0]][this.parent.clickedItemCoords[1]]));
     },
+    mainMenuHelp: function() {
+      this.contentToRun.push(new HelpText(this.x, this.y, this.width, this.height, "This is an incremental game about clicking a cookie to" +
+        " gain more and more cookies. Click the cookie to bake a cookie. Open the shop to buy upgrades allowing you to gain cookies" +
+        " without exerting yourself at all! Spend your cookies on cool weapons and weapon upgrades by clicking on them in your inventory."));
+    },
   };
 
 }
@@ -225,6 +237,7 @@ function resizeObjects() {
   inventoryOpenButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.305, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
   miniGamesButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.505, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
   battleButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.705, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
+  mainMenuHelpButton.resize(width - scalars.inventoryOpenScalar / 1.5, height * 0.9, scalars.inventoryOpenScalar, scalars.inventoryOpenScalar);
 
   // Buttons
   titleNewGameButton.resize(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH);

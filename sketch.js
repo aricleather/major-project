@@ -103,7 +103,7 @@ function cookieIncrement() {
 }
 
 // Load content used in game
-let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon; // Images
+let cookie, coin, oven, bakery, factory, woodenSword, stoneAxe, rightArrow, gameCursor, clickUpgrade, goldStar, battleIcon, help; // Images
 let battle1Icon, heart;
 let goblin, giant, cookieGun, projectiles;
 let coinSound, popSound, textBlip, myNameIsJonasSong; // Sounds
@@ -154,6 +154,7 @@ function preload() {
   gameCursor = loadImage("assets/cursor.png");
   bakery = loadImage("assets/bakery.png");
   factory = loadImage("assets/factory.png");
+  help = loadImage("assets/question.png");
   clickUpgrade = loadImage("assets/clickUpgrade.png");
   goldStar = loadImage("assets/goldStar.png");
   woodenSword = loadImage("assets/woodenSword.png");
@@ -344,6 +345,13 @@ function drawDesktop() {
   }
   runDialogBoxes();
 
+  for(let key of openWindows.keys()) {
+    openWindows.get(key).run();
+    if (openWindows.get(key).close) {
+      openWindows.delete(key);
+    }
+  }
+  
   for(let key of openTextBoxes.keys()) {
     openTextBoxes.get(key).run();
   }
@@ -391,7 +399,7 @@ function menu() { // gameState 0
   }
 
   textSize(15);
-  text(mobile, width * 0.93, height * 0.97);
+  // text(mobile, width * 0.93, height * 0.97);
   // If save file was stored as cookie in browser, show load option
 }
 
@@ -418,12 +426,6 @@ function mainGame() { // gameState 1
     openAchievementsButton.run();
   }
   displayPlayerData();
-  for(let key of openWindows.keys()) {
-    openWindows.get(key).run();
-    if (openWindows.get(key).close) {
-      openWindows.delete(key);
-    }
-  }
 }
 
 function displayGame() {
@@ -509,6 +511,9 @@ function displayMenu() {
   tint(255, 255);
   image(cookie, width / 2 - textWidth(titleText) / 2 - scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
   image(cookie, width / 2 + textWidth(titleText) / 2 + scalars.titleScreenCookie, height * 0.2, scalars.titleScreenCookie * scalars.menuAnimScalar, scalars.titleScreenCookie * scalars.menuAnimScalar);
+
+  // Help button
+  mainMenuHelpButton.run();
 }
 
 function animateMenu() {

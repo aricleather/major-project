@@ -3019,3 +3019,37 @@ class BattleProjectile {
     this.dy = this.destY < this.y ? Math.cos(this.angle) * -this.speed : Math.cos(this.angle) * this.speed;
   }
 }
+
+class HelpText extends GameObject {
+  constructor(x, y, width, height, text) {
+    super(x, y, width, height);
+    this.tSize = this.width / 25;
+    this.text = formatText(text, this.width, this.tSize);
+
+    // Positioning
+    this.leftX = this.x - this.width / 2 + this.tSize / 2;
+    this.topY = this.y - this.height / 2 + this.tSize / 2;
+  }
+
+  run() {
+    fill(0);
+    noStroke(0);
+    textAlign(LEFT, TOP);
+    textSize(this.tSize);
+    text(this.text, this.leftX, this.topY);
+  }
+
+  resize(x = 0, y = 0, width = 0, height = 0) {
+    // Move box
+    this.x = x || this.x;
+    this.y = y || this.y;
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    // Recalculate positioning and sizing
+    this.tSize = this.width / 25;
+    this.text = formatText(this.text, this.width, this.tSize);
+    this.leftX = this.x - this.width / 2 + this.tSize / 2;
+    this.topY = this.y - this.height / 2 + this.tSize / 2;
+  }
+}
