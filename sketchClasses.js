@@ -452,6 +452,7 @@ class ShopWeaponObject extends GameObject {
       }
     }
     
+    // Draw the rectangle around me
     rectMode(CENTER);
     fill(30, 70);
     noStroke();
@@ -496,6 +497,7 @@ class ShopWeaponObject extends GameObject {
   }
 
   saveLoad(arr) {
+    // For loading saves from cookies
     this.price = int(arr[0]);
     this.owned = int(arr[1]);
     this.updateText();
@@ -1046,6 +1048,7 @@ class BackgroundBox extends GameObject {
           this.close = false;
         }
       }
+      // This is never really used but technically will close once the mouse enters then leaves the area
       else if(this.mode === "hover") {
         if(!this.hovered && this.mouse) {
           this.hovered = true;
@@ -1215,6 +1218,7 @@ class InventoryScreen extends GameObject {
   }
 
   openContextMenu() {
+    // Based on the item clicked on, open the options menu at that location
     this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
 
     this.contextId = openWindowIdCounter.val;
@@ -1223,6 +1227,7 @@ class InventoryScreen extends GameObject {
   }
 
   openUpgradeMenu() {
+    // Opens the upgrade menu when selected from the contextMenu
     this.clickedItemCoords = [this.mouseYPos, this.mouseXPos];
 
     this.upgradeId = openWindowIdCounter.val;
@@ -1231,6 +1236,7 @@ class InventoryScreen extends GameObject {
   }
 
   mousePickUpItem() {
+    // When move is seleceted from the options menu, pick up that item
     this.mouseHeldItem = this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]];
     this.itemArr[this.clickedItemCoords[0]][this.clickedItemCoords[1]] = 0;
   }
@@ -1851,6 +1857,7 @@ class MemoryPuzzle extends GameObject {
   }
 
   runIntro() {
+    // Flip all the cards one by one so the player can start memorizing
     if(millis() > this.timeToStartFlipping) {
       if(millis() > this.flipNextCard) {
         this.cardFlipArray[this.cardToFlip % 4][Math.floor(this.cardToFlip / 4)] = 1;
@@ -2037,6 +2044,7 @@ class RhythmGame extends GameObject {
   }
 
   run() {
+    // Which phase?
     this.displayText();
     if(this.gamePhase === 0) {
       this.runMainMenu();
@@ -2321,6 +2329,7 @@ class TextBox extends GameObject {
   }
  
   run() {
+    // Run functions at the right time 
     this.calcMouse();
     if(!this.mainPreFuncRan && this.preFunc) {
       this.preFunc();
@@ -2340,6 +2349,7 @@ class TextBox extends GameObject {
       this.messagePreFuncRan = true;
     }
 
+    // Check whether or not to skip while running the message's whileFunc
     else if(this.messageArr[0].whileFunc) {
       let whileFuncCheck = this.messageArr[0].whileFunc();
       if(whileFuncCheck === "skip") {
@@ -2521,6 +2531,7 @@ class Battle {
 
 
     else if(this.battlePhase === 1) {
+      // Do all the game stuff in the right order
       this.fillTiles();
       this.mouseTile();
       this.drawGrid();
@@ -2561,6 +2572,7 @@ class Battle {
   }
 
   introAnim() {
+    // Spawns the "level 1" thing animation
     let animFunc = function() {
       this.battlePhase = 1;
     }.bind(this);
@@ -2584,6 +2596,7 @@ class Battle {
   }
 
   drawTowers() {
+    // Looks up where all the towers are in battleMaps and draws them
     for(let coord of this.towerLocations) {
       let theTile = this.map.player[coord[1]][coord[0]];
       if(theTile.type === "cookieGun") {
@@ -2594,6 +2607,7 @@ class Battle {
   }
   
   drawProjectiles() {
+    // Looks up all the projectiles and draws them
     for(let i = 0; i < this.projectiles.length; i++) {
       this.projectiles[i].run();
       if(this.projectiles[i].hitEnemy) {
@@ -2638,6 +2652,7 @@ class Battle {
   }
 
   fillTiles() {
+    // Fills the tiles based on the map
     rectMode(CORNER);
     for(let i = 0; i < this.gridCols; i++) {
       let rectX = i / this.gridCols * width;
@@ -2655,6 +2670,7 @@ class Battle {
   }
 
   displayButtons() {
+    // Just displays start round if a round is not in progress
     if(!this.roundInProgress) {
       this.beginRoundButton.run();
     }
@@ -2718,6 +2734,7 @@ class Battle {
   }
 
   endRound() {
+    // Resets vars and gives a reward
     this.roundInProgress = false;
     this.enemies = [];
     this.enemiesDefeated = 0;
@@ -2753,6 +2770,7 @@ class Battle {
   }
 }
 
+// So that enemies know which number on my map corresponds to which direction
 let dMap = new Map();
 dMap.set(2, "up");
 dMap.set(3, "right");
@@ -2894,12 +2912,14 @@ class BattleEnemy {
 
 class BattleTower {
   constructor(tile, towerType, tileWidth, tileHeight) {
+    // Take in vars
     this.tile = tile;
     this.gridCols = 40;
     this.gridRows = 20;
     this.x = tile[0] / this.gridCols * width + tileWidth / 2;
     this.y = tile[1] / this.gridRows * height + tileHeight / 2;
     
+    // Set own vars depending on type
     if(towerType === "cookieGun") {
       this.type = "cookieGun";
       this.hitSpeed = 500;
@@ -2910,6 +2930,7 @@ class BattleTower {
     }
   }
 
+  // Show the circle where enemies can be hit
   displayRadius() {
     fill(220, 50);
     ellipse(this.x, this.y, this.radius);
@@ -2939,6 +2960,7 @@ class BattleTower {
   }
 
   attack(enemies, projectiles) {
+    // Knowing which enemy is nearest, spawn a projectile that will travel toward it and damage it
     if(millis() > this.cooldown && this.targetedEnemy !== null) {
       let projectileFunc = function(damage) {
         this.hitpoints -= damage;
@@ -2979,14 +3001,17 @@ class BattleProjectile {
 
 
   run() {
+    // Every 5 frames, look up the enemy's location so as to keep the projectile continuously moving toward the enemy seamlessly
     if(frameCount % 5 === 0) {
       this.reCalculateDest();
     }
 
+    // Use calculates dx and dy to move toward enemy
     image(this.pImage, this.x, this.y, this.size, this.size);
     this.x += this.dx;
     this.y += this.dy;
 
+    // Based on the 4 cases, do damage once one of those cases is met
     if(this.dx < 0 && this.x <= this.destX) { // left
       if(this.dy > 0 && this.y >= this.destY) { // down
         this.doDamage();
@@ -3006,11 +3031,13 @@ class BattleProjectile {
   }
 
   doDamage() {
+    // Use the passed function to damage the targeted enemy
     this.func(this.damage);
     this.hitEnemy = true;
   }
 
   reCalculateDest() {
+    // Find the enemy's location and re-do the math to calculate where to go and how fast
     this.destX = this.enemy.x;
     this.destY = this.enemy.y;
     this.angle = Math.atan((this.destX - this.x) / (this.destY - this.y));

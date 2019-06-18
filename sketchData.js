@@ -1,3 +1,5 @@
+// This is all data used in various spots in the game
+
 let weaponUpgradeData = {
   woodenSword: {
     maxLevel: 6,

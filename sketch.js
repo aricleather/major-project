@@ -775,6 +775,7 @@ function keyPressed() {
 }
 
 function resetGame() {
+  // Put all the variables to 0, start over
   cookies = 0;
   autoCookies = 0;
   clicks = 0;
@@ -812,9 +813,9 @@ function mouseWheel(event) {
 }
 
 function windowResized() {
+  // Have to do different things on mobile and desktop. Basically just resize the canvas then call the function
+  // that tells all my objects to resize with their built in functions.
   if(!mobile) {
-    // console.log("Resize not called: ", windowWidth, windowHeight);
-    // console.log(width, height);
     for(let [key, aWindow] of openWindows) {
       aWindow.cnvResize(width, height, windowWidth, windowHeight);
     }
@@ -829,6 +830,7 @@ function windowResized() {
 }
 
 function spawnItem(itemToSpawn, levelOfItem = 2) {
+  // Here I'm just taking in basic data about a weapon and returning the correspond object
   if(itemToSpawn === "Wooden Sword") {
     let tempGameWeapon = new GameWeapon(woodenSword, "physical", "Wooden Sword", "woodenSword", "Breaks easily, but leaves splinters.", levelOfItem);
     tempGameWeapon.stats = {

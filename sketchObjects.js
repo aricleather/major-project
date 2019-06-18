@@ -156,6 +156,7 @@ function initObjects() {
   // Exp bars
   playerExpBar = new ExperienceBar(width * 0.25 + 16 * (width * 0.15 / 20), height * 0.02, width * 0.4, height * 0.02, 0, 10);
 
+  // The spawners are run using .call to give windows in the game their own content to run 
   spawners = {
     playerInventory: function() {
       this.contentToRun.push(new InventoryScreen(width / 2, height * 0.22, 400, 200, this.id, 1, playerInventory));

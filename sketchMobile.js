@@ -33,6 +33,7 @@ function initMobileScalarsPositions() {
 }
 
 function drawMobile() {
+  // Check state and do that state
   if(gameState === 0)  {
     menuMobile();
   }
@@ -75,6 +76,7 @@ function menuMobile() {
 }
 
 function animateMenuMobile() {
+  // Make the cookies get big and get small. It looks cool
   if (scalars.menuAnimScalar > 1.07) {
     scalars.menuAnimSpeed = -scalars.menuAnimSpeed;
     scalars.menuAnimScalar = 1.05;
@@ -169,5 +171,7 @@ function touchStarted() {
 }
 
 function touchEnded() {
+  // Basically singleTouch gets set to false at the end of every frame, meaning there is only a one frame window
+  // where objects can register touches, leading to the player's ability to only touch things ONCE
   singleTouch = true;
 }

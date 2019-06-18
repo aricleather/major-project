@@ -1,4 +1,4 @@
-// Generate all game objects
+// Generate all game objects for mobile
 function initMobileObjects() {
   // Buttons
   titleStartButton = new ButtonMobile(width / 2, height / 2, scalars.menuButtonW, scalars.menuButtonH, "Play", function() {

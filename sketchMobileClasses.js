@@ -131,6 +131,7 @@ class TabButtonMobile extends GameObjectMobile {
     this.tSize = this.width / 15;
   }
 
+  // Same as normal tab button, it's a rounded button that can be tapped on to open the store in this case
   run() {
     this.calcTouch();
 
@@ -182,7 +183,7 @@ class ShopObjectMobile extends GameObjectMobile {
     shopNumber++;
   }
   
-  // The clicked() function here checks if you have enough money then does stuff if you do
+  // The touchFunc() function here checks if you have enough money then does stuff if you do
   touchFunc() {
     if(cookies >= this.price) {
       autoCookies += this.cps;
@@ -215,7 +216,7 @@ class ShopObjectMobile extends GameObjectMobile {
     imageMode(CENTER);
     image(this.objImage, this.x, this.y, this.width, this.height);
   
-    // Again utilizing calcMouse() and alreadyClicked to run this.clicked() on click only once
+    
     if(this.touched && !touchBlock) {
       if(singleTouch) {
         this.touchFunc();

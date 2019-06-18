@@ -23,6 +23,7 @@ let gameMessages = {
     new Message("And we are running out of time...")],
 };
 
+// Spawns the text boxes with a pointer to the set of messages to use and with what functions
 let textBoxSpawners = {
   intro: function() {
     let tempId = textBoxIdCounter.val;
@@ -38,6 +39,7 @@ let textBoxSpawners = {
 };
 
 let animations = {
+  // Black screen eats the screen, can be used with startAnimation() to do functions while it goes
   blackScrollFull: {
     run: function() {
       rectMode(CORNER);
@@ -75,6 +77,7 @@ let animations = {
     acc: 1,
   },
 
+  // Same as above but it briefly displays a message on the screen
   blackScrollFullMessage: {
     run: function() {
       rectMode(CORNER);
@@ -139,6 +142,7 @@ let animations = {
     stopRect: false,
   },
 
+  // Same as above but with no message and only half the anim
   blackScrollHalf: {
     run: function() {
       rectMode(CORNER);
